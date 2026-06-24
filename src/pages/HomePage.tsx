@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading, RadioButtonGroup, RadioButton } from '@carbon/react'
 import {
   Notification,
@@ -360,6 +360,13 @@ const ISSUE_LABELS: Record<IssueType, { tag: string; message: (name: string) => 
   Verification:   { tag: 'Needs verification', message: (n) => `Verification required for ${n}`,       modalTitle: 'Verification Required' },
 }
 const PROGRESS_STEPS = ['Receive', 'Preparing', 'Waiting driver', 'Transit']
+
+const MOCK_NOTIFICATIONS = [
+  { id: 1, dotColor: '#8a3ffc', title: 'New Order',        name: 'Dorothy Chen',    desc: 'Lisinopril 10mg · Rx · 2 items',                              time: 'just now'   },
+  { id: 2, dotColor: '#f1c21b', title: 'Order waiting',    name: 'Marcus Williams', desc: 'Metformin 500mg · Received 18 min ago · Needs acceptance',     time: '18 min ago' },
+  { id: 3, dotColor: '#da1e28', title: 'Order Blocked',    name: 'Linda Ramirez',   desc: 'Insurance rejected · Step therapy required',                   time: '5 min ago'  },
+  { id: 4, dotColor: '#ff832b', title: 'Driver on the way', name: 'Thomas Park',    desc: 'Driver #4 · Marcus T. · Est. pickup in 8 min',                 time: '2 min ago'  },
+] as const
 
 const SECTION_TITLES: Record<SidebarSection, string> = {
   'new-order': 'New Orders',
@@ -1022,6 +1029,33 @@ function BlockedDetailPanel({ order, onClose, onOpenResolve }: {
   )
 }
 
+// ── Notifications Dropdown ────────────────────────────────────────────────────
+
+function NotificationsDropdown({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="home__notif-dropdown" role="dialog" aria-label="Notifications">
+      <div className="home__notif-dropdown-header">
+        <h3 className="home__notif-dropdown-title">Notifications</h3>
+        <button className="home__notif-mark-read" onClick={onClose}>Mark all as read</button>
+      </div>
+      <div className="home__notif-list">
+        {MOCK_NOTIFICATIONS.map((n) => (
+          <button key={n.id} className="home__notif-item" onClick={onClose}>
+            <span className="home__notif-dot-indicator" style={{ backgroundColor: n.dotColor }} aria-hidden="true" />
+            <div className="home__notif-item-body">
+              <p className="home__notif-item-title">
+                {n.title} <span>· {n.name}</span>
+              </p>
+              <p className="home__notif-item-desc">{n.desc}</p>
+              <p className="home__notif-item-time">{n.time}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Empty State ───────────────────────────────────────────────────────────────
 
 function EmptyState() {
@@ -1054,6 +1088,19 @@ export default function HomePage() {
   const [flaggingOrderId, setFlaggingOrderId] = useState<string | null>(null)
   const [resolveModalOrderId, setResolveModalOrderId] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showNotifications) return
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [showNotifications])
 
   // Auto-assign driver after 8s for waiting orders without one
   const waitingNoDriverKey = allOrders.filter((o) => o.orderState === 'waiting-driver' && !o.driver).map((o) => o.id).join(',')
@@ -1178,11 +1225,19 @@ export default function HomePage() {
             <input className="home__search-input" placeholder="Search orders, patients, drug, or order ID..." />
           </div>
         </div>
-        <div className="home__header-right">
-          <button className="home__notif-btn" aria-label="Notifications">
+        <div className="home__header-right" ref={notifRef}>
+          <button
+            className={['home__notif-btn', showNotifications ? 'home__notif-btn--active' : ''].filter(Boolean).join(' ')}
+            aria-label="Notifications"
+            aria-expanded={showNotifications}
+            onClick={() => setShowNotifications((v) => !v)}
+          >
             <Notification size={20} />
-            <span className="home__notif-dot" aria-hidden="true" />
+            {!showNotifications && <span className="home__notif-dot" aria-hidden="true" />}
           </button>
+          {showNotifications && (
+            <NotificationsDropdown onClose={() => setShowNotifications(false)} />
+          )}
         </div>
       </header>
 

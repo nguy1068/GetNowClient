@@ -374,7 +374,7 @@ const SECTION_TITLES: Record<SidebarSection, string> = {
 function typeTagClass(type: OrderType) {
   if (type === 'Rx') return 'home__tag home__tag--teal'
   if (type === 'OTC') return 'home__tag home__tag--blue'
-  return 'home__tag home__tag--teal'
+  return 'home__tag home__tag--purple'
 }
 
 function statusTagClass(status: OrderStatus) {
@@ -807,7 +807,7 @@ function FlagIssuesModal({ order, onClose, onSubmit }: {
         {/* Reason radio group */}
         <div className="home__modal-section">
           <RadioButtonGroup
-            legendText="What is the issues"
+            legendText="What is the issue?"
             name="flag-reason"
             valueSelected={reason}
             onChange={(val) => setReason(val as FlagReason)}
@@ -1220,13 +1220,13 @@ export default function HomePage() {
                 <NavItem label="Delivered" count={countOf('delivered')} active={section === 'delivered'} onClick={() => changeSection('delivered')} />
                 <div className="home__nav-divider" />
                 <NavItem label="History" active={false} onClick={() => {}} />
-                <NavItem label="Setting" active={showSettings} onClick={() => { setShowSettings(true); setSelectedId(null) }} />
+                <NavItem label="Settings" active={showSettings} onClick={() => { setShowSettings(true); setSelectedId(null) }} />
               </>
             ) : null}
           </nav>
 
           <div className="home__sidebar-footer">
-            <p className="home__toggle-label">Keep turn on to receive orders</p>
+            <p className="home__toggle-label">Keep turned on to receive orders</p>
             <div className="home__toggle-row">
               <Toggle id="accepting-orders" labelA="" labelB="" toggled={acceptingOrders} onToggle={(v) => setAcceptingOrders(v)} hideLabel />
               <span className="home__toggle-text">Accepting Orders</span>
@@ -1272,7 +1272,7 @@ export default function HomePage() {
           ) : (
             <>
               <p className="home__content-title">
-                {activeTab === 'blocked' ? `Blocked${blockedFilter ? ` — ${blockedFilter}` : ''}` : SECTION_TITLES[section]}
+                {activeTab === 'blocked' ? `Blocked${blockedFilter ? `: ${blockedFilter}` : ''}` : SECTION_TITLES[section]}
               </p>
               <div className="home__grid">
                 {displayOrders.map((o) => (

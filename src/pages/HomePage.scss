@@ -317,7 +317,6 @@
   }
 
   &--compact {
-    border-radius: 0;
     border-left: 3px solid transparent;
   }
 
@@ -374,6 +373,11 @@
   &--orange {
     background-color: #fff2e8;
     color: #a56300;
+  }
+
+  &--purple {
+    background-color: #e8daff;
+    color: #6929c4;
   }
 }
 
@@ -713,7 +717,7 @@
 .home__detail-section-sub {
   @include type-style('label-01');
   color: $text-secondary;
-  margin: $spacing-01 0 0;
+  margin: $spacing-02 0 0;
 }
 
 // ── Prescription checklist row ────────────────────────────────────────────────
@@ -835,10 +839,6 @@
 
 .home__card--blocked {
   border-left: 3px solid #da1e28;
-
-  &.home__card--compact {
-    border-left: 3px solid #da1e28;
-  }
 }
 
 // ── Flag Issues Modal ─────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Toggle } from '@carbon/react'
-import { Launch, View, ViewOff, Information } from '@carbon/icons-react'
+import { Launch, View, ViewOff, Information, Checkmark } from '@carbon/icons-react'
 import './SettingContent.scss'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const
@@ -166,7 +166,7 @@ export default function SettingContent() {
             <label className="setting__label">Pharmacy name</label>
             <input
               className="setting__input"
-              placeholder="name@pharmacy.com..."
+              placeholder="e.g. Shoppers Drug Mart Pembina"
               value={pharmacyName}
               onChange={(e) => setPharmacyName(e.target.value)}
             />
@@ -215,7 +215,7 @@ export default function SettingContent() {
             </select>
           </div>
           <div className="setting__field setting__field--sm">
-            <label className="setting__label">POSTAL CODE</label>
+            <label className="setting__label">Postal code</label>
             <input
               className="setting__input"
               placeholder="00000"
@@ -225,7 +225,7 @@ export default function SettingContent() {
           </div>
         </div>
 
-        <button className="setting__save-btn">Save Change</button>
+        <button className="setting__save-btn">Save Changes</button>
       </section>
 
       {/* ── PMS Connection ───────────────────────────────────────────────── */}
@@ -293,7 +293,7 @@ export default function SettingContent() {
             onClick={handleTestConnection}
             disabled={testStatus === 'testing'}
           >
-            {testStatus === 'ok' ? 'Connected ✓' : testStatus === 'testing' ? 'Testing…' : 'Test Connection'}
+            {testStatus === 'ok' ? <><Checkmark size={16} /> Connected</> : testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
           </button>
         </div>
 

@@ -30,8 +30,54 @@ const STEPS = [
   },
 ]
 
+// ── Validation rules ──────────────────────────────────────────────────────────
+
+const PHONE_RE = /^\(?(\d{3})\)?[-.\s]?(\d{3})[-.\s]?(\d{4})$/
+const POSTAL_RE = /^\d{5}(-\d{4})?$/
+
+type FormFields = {
+  pharmacyName: string
+  streetAddress: string
+  city: string
+  state: string
+  postalCode: string
+  phoneNumber: string
+}
+
+type FormErrors = Partial<Record<keyof FormFields, string>>
+
+function validate(form: FormFields): FormErrors {
+  const errors: FormErrors = {}
+
+  if (!form.pharmacyName.trim())
+    errors.pharmacyName = 'Pharmacy name is required.'
+
+  if (!form.streetAddress.trim())
+    errors.streetAddress = 'Street address is required.'
+
+  if (!form.city.trim())
+    errors.city = 'City is required.'
+
+  if (!form.state)
+    errors.state = 'State is required.'
+
+  if (!form.postalCode.trim())
+    errors.postalCode = 'Postal code is required.'
+  else if (!POSTAL_RE.test(form.postalCode.trim()))
+    errors.postalCode = 'Enter a valid 5-digit ZIP code.'
+
+  if (!form.phoneNumber.trim())
+    errors.phoneNumber = 'Phone number is required.'
+  else if (!PHONE_RE.test(form.phoneNumber.trim()))
+    errors.phoneNumber = 'Enter a valid phone number, e.g. (555) 000-0000.'
+
+  return errors
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function OnboardingPage() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormFields>({
     pharmacyName: '',
     streetAddress: '',
     city: '',
@@ -40,12 +86,36 @@ export default function OnboardingPage() {
     phoneNumber: '',
   })
 
-  const set = (field: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }))
+  const [errors, setErrors] = useState<FormErrors>({})
+  const [submitted, setSubmitted] = useState(false)
+
+  const set = (field: keyof FormFields) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = e.target.value
+      setForm((prev) => ({ ...prev, [field]: value }))
+      // Clear the error for this field as soon as the user corrects it
+      if (submitted) {
+        setErrors((prev) => {
+          const next = { ...prev }
+          const fieldErrors = validate({ ...form, [field]: value })
+          if (fieldErrors[field]) {
+            next[field] = fieldErrors[field]
+          } else {
+            delete next[field]
+          }
+          return next
+        })
+      }
+    }
 
   const handleNext = () => {
-    // TODO: validate + advance to next onboarding step
+    setSubmitted(true)
+    const fieldErrors = validate(form)
+    setErrors(fieldErrors)
+    if (Object.keys(fieldErrors).length === 0) {
+      // TODO: advance to next onboarding step
+      alert('All fields valid — proceeding to next step.')
+    }
   }
 
   return (
@@ -97,6 +167,8 @@ export default function OnboardingPage() {
               placeholder="e.g. Main Street Pharmacy"
               value={form.pharmacyName}
               onChange={set('pharmacyName')}
+              invalid={!!errors.pharmacyName}
+              invalidText={errors.pharmacyName}
             />
 
             <TextInput
@@ -105,6 +177,8 @@ export default function OnboardingPage() {
               placeholder="123 Main St"
               value={form.streetAddress}
               onChange={set('streetAddress')}
+              invalid={!!errors.streetAddress}
+              invalidText={errors.streetAddress}
             />
 
             <div className="onboarding__row">
@@ -114,6 +188,8 @@ export default function OnboardingPage() {
                 placeholder="City"
                 value={form.city}
                 onChange={set('city')}
+                invalid={!!errors.city}
+                invalidText={errors.city}
                 className="onboarding__city"
               />
 
@@ -122,6 +198,8 @@ export default function OnboardingPage() {
                 labelText="State"
                 value={form.state}
                 onChange={set('state')}
+                invalid={!!errors.state}
+                invalidText={errors.state}
                 className="onboarding__state"
               >
                 <SelectItem value="" text="" />
@@ -132,10 +210,12 @@ export default function OnboardingPage() {
 
               <TextInput
                 id="postal-code"
-                labelText="POSTAL CODE"
+                labelText="Postal code"
                 placeholder="00000"
                 value={form.postalCode}
                 onChange={set('postalCode')}
+                invalid={!!errors.postalCode}
+                invalidText={errors.postalCode}
                 className="onboarding__postal"
               />
             </div>
@@ -146,7 +226,9 @@ export default function OnboardingPage() {
               placeholder="(555) 000-0000"
               value={form.phoneNumber}
               onChange={set('phoneNumber')}
-              helperText="Shown to patients and drivers for questions."
+              invalid={!!errors.phoneNumber}
+              invalidText={errors.phoneNumber}
+              helperText={errors.phoneNumber ? undefined : 'Shown to patients and drivers for questions.'}
             />
           </div>
         </main>

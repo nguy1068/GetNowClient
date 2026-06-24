@@ -1011,59 +1011,189 @@
   }
 }
 
-// ── Blocked detail panel ──────────────────────────────────────────────────────
+// ── Blocked detail panel — error notification banner ──────────────────────────
 
-.home__blocked-banner {
+.home__blocked-notification {
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: $spacing-03;
+  justify-content: space-between;
+  gap: $spacing-04;
   padding: 0 $spacing-05;
   height: 48px;
   background-color: #fff1f1;
+  border-left: 3px solid #da1e28;
   border-bottom: 1px solid #ffd7d9;
-  @include type-style('body-compact-01');
-  color: #a2191f;
 }
 
-.home__blocked-banner-icon {
+.home__blocked-notification-left {
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.home__blocked-notification-icon {
   color: #da1e28;
   flex-shrink: 0;
 }
 
-.home__blocked-banner-label {
+.home__blocked-notification-category {
+  @include type-style('body-compact-01');
   font-weight: 600;
+  color: $text-primary;
+  flex-shrink: 0;
 }
 
-.home__blocked-banner-type {
-  font-weight: 400;
+.home__blocked-notification-msg {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.home__blocked-banner-held {
-  font-weight: 400;
+.home__blocked-notification-resolve {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $link-primary;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $link-primary-hover;
+    text-decoration: underline;
+  }
+}
+
+// ── Issue-type tag in blocked detail header ───────────────────────────────────
+
+.home__tag--issue {
+  background-color: #ffd6e8;
   color: #9f1853;
 }
 
-.home__blocked-notes {
-  flex-shrink: 0;
-  padding: $spacing-04 $spacing-05;
-  border-bottom: 1px solid $border-subtle-01;
+// ── Resolve modal ─────────────────────────────────────────────────────────────
+
+.home__resolve-modal {
+  background: $background;
+  width: 671px;
   display: flex;
   flex-direction: column;
-  gap: $spacing-02;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3);
 }
 
-.home__blocked-notes-label {
+.home__resolve-modal-inner {
+  padding: $spacing-05;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-04;
+}
+
+.home__resolve-sublabel {
   @include type-style('label-01');
-  font-weight: 600;
   color: $text-secondary;
   margin: 0;
 }
 
-.home__blocked-notes-text {
-  @include type-style('body-compact-01');
+.home__resolve-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home__resolve-title {
+  @include type-style('heading-04');
+  font-weight: 600;
   color: $text-primary;
   margin: 0;
+}
+
+.home__resolve-body {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.home__resolve-note-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home__resolve-note-label {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+}
+
+.home__resolve-char-count {
+  @include type-style('label-01');
+  color: $text-secondary;
+}
+
+.home__resolve-textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid $border-strong-01;
+  background-color: $field-01;
+  padding: $spacing-04;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  resize: vertical;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+
+  &:focus {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+.home__resolve-footer {
+  display: flex;
+  flex-shrink: 0;
+  height: 64px;
+  border-top: 1px solid $border-subtle-01;
+}
+
+.home__resolve-btn {
+  flex: 1;
+  height: 100%;
+  border: none;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--cancel {
+    background-color: #161616;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #393939;
+    }
+  }
+
+  &--resolve {
+    background-color: $interactive;
+    color: $text-on-color;
+
+    &:hover {
+      background-color: #0050e6;
+    }
+  }
 }
 
 // ── Success Toast ─────────────────────────────────────────────────────────────

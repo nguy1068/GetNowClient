@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Toggle } from '@carbon/react'
+import { Toggle, ProgressIndicator, ProgressStep } from '@carbon/react'
 import {
   Notification,
   Search,
@@ -17,7 +17,7 @@ import './HomePage.scss'
 
 type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
-type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'delivered'
+type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'in-transit' | 'delivered'
 
 interface Prescription {
   name: string
@@ -157,7 +157,7 @@ const INITIAL_ORDERS: Order[] = [
 
 const BLOCKED_FILTERS = ['Insurance', 'Prescription', 'Out of Stock', 'Need Verification']
 
-const PROGRESS_STEPS = ['Receive', 'Preparing', 'In transit', 'Completed']
+const PROGRESS_STEPS = ['Receive', 'Preparing', 'Waiting for driver', 'Transit']
 
 // ── Tag helpers ───────────────────────────────────────────────────────────────
 
@@ -269,18 +269,13 @@ function DetailPanel({ order, onClose, onAccept, onFlagIssues }: {
         </div>
       </div>
 
-      {/* Progress steps */}
-      <div className="home__progress">
-        {PROGRESS_STEPS.map((step, i) => (
-          <div
-            key={step}
-            className={['home__progress-step', i === 0 ? 'home__progress-step--active' : ''].filter(Boolean).join(' ')}
-          >
-            {i > 0 && <div className="home__progress-line home__progress-line--before" />}
-            <div className="home__progress-dot" />
-            <span className="home__progress-label">{step}</span>
-          </div>
-        ))}
+      {/* Progress indicator */}
+      <div className="home__progress-wrap">
+        <ProgressIndicator currentIndex={0} spaceEqually>
+          {PROGRESS_STEPS.map((step) => (
+            <ProgressStep key={step} label={step} />
+          ))}
+        </ProgressIndicator>
       </div>
 
       {/* Scrollable body */}
@@ -489,6 +484,7 @@ export default function HomePage() {
                 <NavItem label="New order" count={orders.length} active={section === 'new-order'} onClick={() => setSection('new-order')} />
                 <NavItem label="Being Prepared" count={0} active={section === 'being-prepared'} onClick={() => setSection('being-prepared')} />
                 <NavItem label="Waiting for Driver" active={section === 'waiting-driver'} onClick={() => setSection('waiting-driver')} />
+                <NavItem label="In transit" active={section === 'in-transit'} onClick={() => setSection('in-transit')} />
                 <NavItem label="Delivered" count={8} active={section === 'delivered'} onClick={() => setSection('delivered')} />
               </>
             ) : (

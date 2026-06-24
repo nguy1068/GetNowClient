@@ -1,0 +1,695 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+
+.home {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: $layer-01;
+  overflow: hidden;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.home__header {
+  height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-05;
+  padding: 0 $spacing-07;
+  background-color: $background;
+  border-bottom: 1px solid $border-subtle-01;
+}
+
+.home__header-left {
+  flex: 0 0 auto;
+}
+
+.home__pharmacy-name {
+  @include type-style('heading-03');
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+.home__header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.home__search {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid $border-strong-01;
+  background-color: $field-01;
+  padding: 0 $spacing-04;
+  height: 40px;
+  gap: $spacing-03;
+}
+
+.home__search-icon {
+  color: $icon-secondary;
+  flex-shrink: 0;
+}
+
+.home__search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+}
+
+.home__header-right {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.home__notif-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: $icon-primary;
+  border-radius: 50%;
+
+  &:hover {
+    background-color: $layer-hover-01;
+  }
+}
+
+.home__notif-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background-color: #fa4d56;
+  border-radius: 50%;
+  border: 2px solid $background;
+}
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+
+.home__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+.home__sidebar {
+  width: 301px;
+  flex-shrink: 0;
+  background-color: $background;
+  border-right: 1px solid $border-subtle-01;
+  display: flex;
+  flex-direction: column;
+}
+
+.home__tabs {
+  display: flex;
+  border-bottom: 1px solid $border-subtle-01;
+}
+
+.home__tab {
+  flex: 1;
+  height: 48px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  border-bottom: 2px solid transparent;
+  transition: color 0.1s, border-color 0.1s;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $layer-hover-01;
+  }
+
+  &--active {
+    color: $text-primary;
+    font-weight: 600;
+    border-bottom-color: $interactive;
+  }
+}
+
+.home__blocked-filters {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-03 0;
+  border-bottom: 1px solid $border-subtle-01;
+}
+
+.home__blocked-filter {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 $spacing-05;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  text-align: left;
+
+  &:hover {
+    background-color: $layer-hover-01;
+    color: $text-primary;
+  }
+
+  &--active {
+    background-color: $layer-selected-01;
+    color: $text-primary;
+    font-weight: 600;
+    border-left: 3px solid $interactive;
+    padding-left: calc(#{$spacing-05} - 3px);
+  }
+}
+
+.home__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-03 0;
+}
+
+.home__nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 $spacing-05;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  text-align: left;
+
+  &:hover {
+    background-color: $layer-hover-01;
+  }
+
+  &--active {
+    background-color: $layer-selected-01;
+    border-left-color: $interactive;
+    padding-left: calc(#{$spacing-05} - 3px);
+  }
+}
+
+.home__nav-label {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+}
+
+.home__nav-count {
+  @include type-style('label-01');
+  color: $text-secondary;
+  background-color: $layer-02;
+  border-radius: 10px;
+  padding: 0 $spacing-03;
+  min-width: 20px;
+  text-align: center;
+}
+
+.home__sidebar-footer {
+  padding: $spacing-05;
+  border-top: 1px solid $border-subtle-01;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.home__toggle-label {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: 0;
+}
+
+.home__toggle-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-04;
+}
+
+.home__toggle-text {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// ── Content area ──────────────────────────────────────────────────────────────
+
+.home__content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: $spacing-05;
+}
+
+// ── Grid view ─────────────────────────────────────────────────────────────────
+
+.home__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: $spacing-05;
+  align-content: start;
+}
+
+// ── Split view ────────────────────────────────────────────────────────────────
+
+.home__split {
+  display: flex;
+  height: 100%;
+  gap: 0;
+}
+
+.home__list {
+  width: 320px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+  padding-right: $spacing-04;
+}
+
+// ── Order Card ────────────────────────────────────────────────────────────────
+
+.home__card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+  padding: $spacing-05;
+  background-color: $background;
+  border: 1px solid $border-subtle-01;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: box-shadow 0.1s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &--compact {
+    border-radius: 0;
+    border-left: 3px solid transparent;
+  }
+
+  &--selected {
+    border-left-color: $interactive;
+    background-color: $layer-selected-01;
+  }
+}
+
+.home__card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home__card-id {
+  @include type-style('label-01');
+  color: $text-secondary;
+}
+
+.home__card-patient {
+  @include type-style('heading-03');
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// ── Tags ──────────────────────────────────────────────────────────────────────
+
+.home__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 $spacing-03;
+  height: 20px;
+  @include type-style('label-01');
+  font-weight: 400;
+  border-radius: 10px;
+  white-space: nowrap;
+
+  &--teal {
+    background-color: #d9fbfb;
+    color: #007d79;
+  }
+
+  &--blue {
+    background-color: #d0e2ff;
+    color: #0043ce;
+  }
+
+  &--green {
+    background-color: #defbe6;
+    color: #0e6027;
+  }
+
+  &--orange {
+    background-color: #fff2e8;
+    color: #a56300;
+  }
+}
+
+// ── Drug list ─────────────────────────────────────────────────────────────────
+
+.home__drug-list {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-02;
+}
+
+.home__drug-icon {
+  color: $icon-secondary;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.home__drug-names {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.home__drug-more {
+  color: $link-primary;
+}
+
+// ── Card footer ───────────────────────────────────────────────────────────────
+
+.home__card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home__card-script {
+  display: flex;
+  align-items: center;
+  gap: $spacing-02;
+  @include type-style('label-01');
+  color: $text-secondary;
+}
+
+.home__card-script-icon {
+  color: $icon-secondary;
+}
+
+.home__card-time {
+  @include type-style('label-01');
+  color: $text-secondary;
+}
+
+// ── Detail Panel ──────────────────────────────────────────────────────────────
+
+.home__detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: $background;
+  border-left: 1px solid $border-subtle-01;
+  overflow: hidden;
+}
+
+.home__detail-header {
+  flex-shrink: 0;
+  padding: $spacing-05;
+  border-bottom: 1px solid $border-subtle-01;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-04;
+}
+
+.home__detail-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.home__detail-id {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: 0 0 $spacing-02;
+}
+
+.home__detail-name {
+  @include type-style('heading-04');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.home__detail-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: $icon-primary;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: $layer-hover-01;
+  }
+}
+
+.home__detail-tags {
+  display: flex;
+  gap: $spacing-03;
+}
+
+// ── Progress indicator ────────────────────────────────────────────────────────
+
+.home__progress {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.home__progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.home__progress-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: $border-subtle-01;
+  border: 2px solid $border-strong-01;
+  z-index: 1;
+
+  .home__progress-step--active & {
+    background-color: $interactive;
+    border-color: $interactive;
+  }
+}
+
+.home__progress-label {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin-top: $spacing-02;
+  text-align: center;
+  font-size: 0.6875rem;
+
+  .home__progress-step--active & {
+    color: $interactive;
+    font-weight: 600;
+  }
+}
+
+.home__progress-line {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: $border-subtle-01;
+}
+
+// ── Detail body ───────────────────────────────────────────────────────────────
+
+.home__detail-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.home__detail-section {
+  padding: $spacing-05;
+  border-bottom: 1px solid $border-subtle-01;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.home__detail-section-title {
+  @include type-style('heading-02');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 $spacing-02;
+}
+
+.home__detail-row {
+  display: flex;
+  gap: $spacing-05;
+}
+
+.home__detail-label {
+  @include type-style('label-01');
+  color: $text-secondary;
+  flex: 0 0 140px;
+}
+
+.home__detail-value {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  flex: 1;
+}
+
+.home__detail-doctor {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  margin: 0;
+}
+
+// ── Accordion ────────────────────────────────────────────────────────────────
+
+.home__accordion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: $spacing-03 $spacing-04;
+  background-color: $layer-02;
+  border: 1px solid $border-subtle-01;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  text-align: left;
+
+  &:hover {
+    background-color: $layer-hover-02;
+  }
+}
+
+.home__accordion-body {
+  padding: $spacing-03 $spacing-04;
+  border: 1px solid $border-subtle-01;
+  border-top: none;
+  background-color: $layer-01;
+}
+
+.home__accordion-item {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  margin: 0;
+  padding: $spacing-02 0;
+
+  & + & {
+    border-top: 1px solid $border-subtle-01;
+  }
+}
+
+// ── Detail footer ─────────────────────────────────────────────────────────────
+
+.home__detail-footer {
+  flex-shrink: 0;
+  display: flex;
+  border-top: 1px solid $border-subtle-01;
+}
+
+.home__detail-btn {
+  flex: 1;
+  height: 64px;
+  border: none;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  transition: background-color 0.1s;
+
+  &--decline {
+    background-color: $layer-01;
+    color: $text-primary;
+    border-right: 1px solid $border-subtle-01;
+
+    &:hover {
+      background-color: $layer-hover-01;
+    }
+  }
+
+  &--accept {
+    background-color: $interactive;
+    color: $text-on-color;
+
+    &:hover {
+      background-color: $button-primary-hover;
+    }
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+.home__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: $spacing-04;
+  text-align: center;
+  padding: $spacing-07;
+}
+
+.home__empty-icon {
+  opacity: 0.7;
+}
+
+.home__empty-title {
+  @include type-style('heading-04');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.home__empty-sub {
+  @include type-style('body-01');
+  color: $text-secondary;
+  margin: 0;
+  max-width: 360px;
+}

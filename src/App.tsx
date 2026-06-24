@@ -3,19 +3,22 @@ import LoginPage from './pages/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 import PmsConnectionPage from './pages/PmsConnectionPage'
 import NotificationsPage from './pages/NotificationsPage'
+import HomePage from './pages/HomePage'
 
-type Page = 'login' | 'onboarding' | 'pms-connection' | 'notifications'
+type Page = 'login' | 'onboarding' | 'pms-connection' | 'notifications' | 'home'
 
 function App() {
   const [page, setPage] = useState<Page>('login')
+
+  if (page === 'home') {
+    return <HomePage />
+  }
 
   if (page === 'notifications') {
     return (
       <NotificationsPage
         onBack={() => setPage('pms-connection')}
-        onFinish={() => {
-          // TODO: navigate to main dashboard
-        }}
+        onFinish={() => setPage('home')}
       />
     )
   }

@@ -265,6 +265,10 @@
   min-width: 0;
   overflow-y: auto;
   padding: $spacing-05;
+
+  &--settings {
+    padding: 0;
+  }
 }
 
 // ── Grid view ─────────────────────────────────────────────────────────────────

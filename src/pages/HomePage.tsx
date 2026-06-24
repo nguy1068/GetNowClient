@@ -15,6 +15,7 @@ import {
   ErrorFilled,
 } from '@carbon/icons-react'
 import './HomePage.scss'
+import SettingContent from './SettingContent'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -1049,6 +1050,7 @@ export default function HomePage() {
   const [acceptingOrders, setAcceptingOrders] = useState(true)
   const [allOrders, setAllOrders] = useState<Order[]>(INITIAL_ORDERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
   const [flaggingOrderId, setFlaggingOrderId] = useState<string | null>(null)
   const [resolveModalOrderId, setResolveModalOrderId] = useState<string | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
@@ -1082,7 +1084,7 @@ export default function HomePage() {
   const flaggingOrder = flaggingOrderId ? allOrders.find((o) => o.id === flaggingOrderId) : null
   const resolveModalOrder = resolveModalOrderId ? allOrders.find((o) => o.id === resolveModalOrderId) : null
 
-  const changeSection = (s: SidebarSection) => { setSection(s); setSelectedId(null) }
+  const changeSection = (s: SidebarSection) => { setSection(s); setSelectedId(null); setShowSettings(false) }
 
   const updateOrder = (id: string, patch: Partial<Order>) =>
     setAllOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)))
@@ -1187,8 +1189,8 @@ export default function HomePage() {
       <div className="home__body">
         <aside className="home__sidebar">
           <div className="home__tabs">
-            <button className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('active'); setBlockedFilter(null); setSelectedId(null) }}>Active</button>
-            <button className={['home__tab', activeTab === 'blocked' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('blocked'); setSelectedId(null) }}>Blocked ({blockedOrders.length})</button>
+            <button className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('active'); setBlockedFilter(null); setSelectedId(null); setShowSettings(false) }}>Active</button>
+            <button className={['home__tab', activeTab === 'blocked' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('blocked'); setSelectedId(null); setShowSettings(false) }}>Blocked ({blockedOrders.length})</button>
           </div>
 
           {activeTab === 'blocked' && (
@@ -1218,7 +1220,7 @@ export default function HomePage() {
                 <NavItem label="Delivered" count={countOf('delivered')} active={section === 'delivered'} onClick={() => changeSection('delivered')} />
                 <div className="home__nav-divider" />
                 <NavItem label="History" active={false} onClick={() => {}} />
-                <NavItem label="Setting" active={false} onClick={() => {}} />
+                <NavItem label="Setting" active={showSettings} onClick={() => { setShowSettings(true); setSelectedId(null) }} />
               </>
             ) : null}
           </nav>
@@ -1232,8 +1234,10 @@ export default function HomePage() {
           </div>
         </aside>
 
-        <main className="home__content">
-          {displayOrders.length === 0 ? (
+        <main className={`home__content${showSettings ? ' home__content--settings' : ''}`}>
+          {showSettings ? (
+            <SettingContent />
+          ) : displayOrders.length === 0 ? (
             <EmptyState />
           ) : showDetail ? (
             <div className="home__split">

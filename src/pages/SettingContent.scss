@@ -1,0 +1,492 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+
+.setting {
+  padding: $spacing-06;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+  min-height: 100%;
+  background-color: $layer-01;
+}
+
+// ── Section card ──────────────────────────────────────────────────────────────
+
+.setting__section {
+  background: $background;
+  padding: $spacing-07;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-06;
+}
+
+.setting__title {
+  @include type-style('heading-04');
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.setting__section-desc {
+  @include type-style('body-01');
+  color: $text-primary;
+  margin: 0;
+}
+
+// ── Section header row (title + action button) ────────────────────────────────
+
+.setting__section-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.setting__add-btn {
+  background-color: #161616;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 0 $spacing-05;
+  height: 32px;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: #393939;
+  }
+}
+
+// ── Store hours ───────────────────────────────────────────────────────────────
+
+.setting__hours-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting__hours-row {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  border-top: 1px solid $border-subtle-01;
+
+  &:last-child {
+    border-bottom: 1px solid $border-subtle-01;
+  }
+}
+
+.setting__day-name {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.setting__toggle-cell {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+
+  // Align Carbon toggle label text
+  .cds--toggle__label-text {
+    @include type-style('body-compact-01');
+    color: $text-secondary;
+  }
+}
+
+.setting__time-range {
+  display: flex;
+  align-items: center;
+  gap: $spacing-04;
+  margin-left: auto;
+
+  &--empty {
+    min-width: 0;
+  }
+}
+
+.setting__time-picker {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border: 1px solid $border-subtle-02;
+  background-color: $field-01;
+}
+
+.setting__time-input {
+  width: 64px;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0 $spacing-03;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  height: 100%;
+  text-align: center;
+
+  &:focus {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+.setting__period-select {
+  height: 100%;
+  border: none;
+  border-left: 1px solid $border-subtle-02;
+  background-color: $field-01;
+  padding: 0 $spacing-05 0 $spacing-03;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5L3.5 6h9z' fill='%23161616'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  outline: none;
+
+  &:focus {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+.setting__time-dash {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  flex-shrink: 0;
+}
+
+// ── Form fields ───────────────────────────────────────────────────────────────
+
+.setting__form-row {
+  display: flex;
+  gap: $spacing-05;
+  align-items: flex-start;
+}
+
+.setting__field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-02;
+  flex: 1;
+  min-width: 0;
+
+  &--grow {
+    flex: 2;
+  }
+
+  &--sm {
+    flex: 0 0 140px;
+  }
+
+  &--sms {
+    margin-top: $spacing-03;
+  }
+}
+
+.setting__label {
+  @include type-style('label-01');
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-02;
+}
+
+.setting__input {
+  height: 40px;
+  border: none;
+  border-bottom: 1px solid $border-strong-01;
+  background-color: $field-01;
+  padding: 0 $spacing-04;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+
+  &:focus {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+.setting__select {
+  height: 40px;
+  border: none;
+  border-bottom: 1px solid $border-strong-01;
+  background-color: $field-01;
+  padding: 0 $spacing-07 0 $spacing-04;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5L3.5 6h9z' fill='%23161616'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  font-family: inherit;
+
+  &:focus {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+.setting__helper {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: 0;
+}
+
+.setting__save-btn {
+  align-self: flex-start;
+  background-color: $interactive;
+  color: $text-on-color;
+  border: none;
+  cursor: pointer;
+  padding: 0 $spacing-06;
+  height: 40px;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+
+  &:hover {
+    background-color: #0050e6;
+  }
+}
+
+// ── PMS Connection ────────────────────────────────────────────────────────────
+
+.setting__pms-status-row {
+  display: flex;
+  align-items: center;
+  margin-top: $spacing-02;
+}
+
+.setting__pms-system {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+}
+
+.setting__pms-connected {
+  @include type-style('body-compact-01');
+  color: $link-primary;
+  margin-left: auto;
+}
+
+.setting__info-icon {
+  color: $icon-secondary;
+  flex-shrink: 0;
+  cursor: help;
+}
+
+.setting__api-tile {
+  background-color: $layer-02;
+  padding: $spacing-05;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.setting__api-tile-title {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.setting__api-tile-body {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  margin: 0;
+}
+
+.setting__link {
+  color: $link-primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: $link-primary-hover;
+  }
+}
+
+.setting__api-row {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-05;
+}
+
+.setting__password-wrap {
+  position: relative;
+
+  .setting__input {
+    padding-right: 48px;
+  }
+}
+
+.setting__eye-btn {
+  position: absolute;
+  right: $spacing-03;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: $icon-secondary;
+  display: flex;
+  align-items: center;
+  padding: 0;
+
+  &:hover {
+    color: $icon-primary;
+  }
+}
+
+.setting__test-btn {
+  flex-shrink: 0;
+  margin-top: 22px;
+  height: 40px;
+  padding: 0 $spacing-05;
+  background: transparent;
+  border: 1px solid $interactive;
+  color: $interactive;
+  cursor: pointer;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $layer-02;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--ok {
+    border-color: #24a148;
+    color: #24a148;
+  }
+}
+
+// ── Notification ──────────────────────────────────────────────────────────────
+
+.setting__notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-06;
+  padding-bottom: $spacing-05;
+  border-bottom: 1px solid $border-subtle-01;
+
+  // Prevent Carbon toggle from shrinking
+  .cds--toggle {
+    flex-shrink: 0;
+  }
+
+  // Align ON/OFF label
+  .cds--toggle__label-text {
+    @include type-style('body-compact-01');
+    min-width: 28px;
+  }
+}
+
+.setting__notif-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting__notif-label {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.setting__notif-desc {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  margin: $spacing-02 0 0;
+}
+
+.setting__sms-block {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-02;
+  padding-top: $spacing-02;
+}
+
+// ── Support & feedback ────────────────────────────────────────────────────────
+
+.setting__support-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $spacing-05;
+}
+
+.setting__doc-link {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $link-primary;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: $spacing-02;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 2px;
+
+  &:hover {
+    text-decoration: underline;
+    color: $link-primary-hover;
+  }
+}
+
+.setting__divider {
+  border: none;
+  border-top: 1px solid $border-subtle-01;
+  margin: 0;
+}
+
+// ── Log out ───────────────────────────────────────────────────────────────────
+
+.setting__logout-wrap {
+  padding-bottom: $spacing-06;
+}
+
+.setting__logout-btn {
+  background-color: #da1e28;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  padding: 0 $spacing-07;
+  height: 40px;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+
+  &:hover {
+    background-color: #ba1b23;
+  }
+}

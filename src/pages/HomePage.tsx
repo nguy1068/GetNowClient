@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Toggle, ProgressIndicator, ProgressStep } from '@carbon/react'
+import { useState, useEffect } from 'react'
+import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading } from '@carbon/react'
 import {
   Notification,
   Search,
@@ -17,6 +17,7 @@ import './HomePage.scss'
 
 type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
+type OrderState = 'new' | 'preparing' | 'waiting-driver' | 'delivered' | 'blocked'
 type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'in-transit' | 'delivered'
 
 interface Prescription {
@@ -29,6 +30,13 @@ interface Prescription {
   refills: number
 }
 
+interface Driver {
+  name: string
+  phone: string
+  pickupEta: string
+  assignedAt: string
+}
+
 interface Order {
   id: string
   patientName: string
@@ -38,25 +46,36 @@ interface Order {
   scriptCount: number
   scriptLabel: string
   time: string
-  // patient detail
   din: string
   dob: string
   gender: string
   phone: string
   address: string
   allergies: string
-  // prescriptions
   doctor: string
   npi: string
-  // insurance
   plan: string
   claim: string
   copay: string
+  // workflow state
+  orderState: OrderState
+  checklistChecked: boolean[]
+  driver?: Driver
+  requestedAt?: string
+  estimatedTime?: string
 }
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
+const MOCK_DRIVER: Driver = {
+  name: 'Marcus T.',
+  phone: '(512) 555-0847',
+  pickupEta: 'Arriving in ~8 min',
+  assignedAt: '2:35 PM',
+}
+
 const INITIAL_ORDERS: Order[] = [
+  // ── New Orders ────────────────────────────────────────────────────────────
   {
     id: '#GN-201',
     patientName: 'Margaret Holloway',
@@ -67,20 +86,13 @@ const INITIAL_ORDERS: Order[] = [
       { name: 'Ramipril 5mg', form: 'Capsule', qty: 30, directions: 'Take 1 capsule by mouth once daily', ndc: '00071-0221-23', dea: 'Non-controlled', refills: 3 },
       { name: 'Rosuvastatin 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet by mouth at bedtime', ndc: '00310-0751-90', dea: 'Non-controlled', refills: 2 },
     ],
-    scriptCount: 1,
-    scriptLabel: 'Prescription',
-    time: '7:30 PM',
-    din: '09837812',
-    dob: 'July 12, 1953 (age 71)',
-    gender: 'Female',
-    phone: '(512) 555-0183',
-    address: '1204 Enfield Rd, Apt 8, Austin',
-    allergies: 'None on file',
-    doctor: 'Dr. Karen Li',
-    npi: '1098765432',
-    plan: 'Medicare Part D — Humana Walmart Rx Plan',
-    claim: 'Approval',
-    copay: '$32.00',
+    scriptCount: 1, scriptLabel: 'Prescription', time: '7:30 PM',
+    din: '09837812', dob: 'July 12, 1953 (age 71)', gender: 'Female', phone: '(512) 555-0183',
+    address: '1204 Enfield Rd, Apt 8, Austin', allergies: 'None on file',
+    doctor: 'Dr. Karen Li', npi: '1098765432',
+    plan: 'Medicare Part D — Humana Walmart Rx Plan', claim: 'Approval', copay: '$32.00',
+    orderState: 'new', checklistChecked: [false, false, false],
+    requestedAt: '7:30 PM', estimatedTime: '5 – 8 mins',
   },
   {
     id: '#GN-202',
@@ -91,20 +103,13 @@ const INITIAL_ORDERS: Order[] = [
       { name: 'Ibuprofen 200mg', form: 'Tablet', qty: 24, directions: 'Take 1-2 tablets every 4-6 hours as needed', ndc: '00573-0168-27', dea: 'Non-controlled', refills: 0 },
       { name: 'Acetaminophen 500mg', form: 'Tablet', qty: 50, directions: 'Take 2 tablets every 6 hours as needed', ndc: '50580-0449-36', dea: 'Non-controlled', refills: 0 },
     ],
-    scriptCount: 1,
-    scriptLabel: 'Over-the-Counter',
-    time: '3:15 PM',
-    din: '06219834',
-    dob: 'Jul 22, 1988',
-    gender: 'Male',
-    phone: '(204) 555-0147',
-    address: '320 Donald St, Winnipeg, MB R3B 2H3',
-    allergies: 'None known',
-    doctor: 'Dr. Ahmed Syed',
-    npi: '2034561890',
-    plan: 'Sun Life Financial',
-    claim: 'CLM-88422',
-    copay: '$5.00',
+    scriptCount: 1, scriptLabel: 'Over-the-Counter', time: '3:15 PM',
+    din: '06219834', dob: 'Jul 22, 1988', gender: 'Male', phone: '(204) 555-0147',
+    address: '320 Donald St, Winnipeg, MB R3B 2H3', allergies: 'None known',
+    doctor: 'Dr. Ahmed Syed', npi: '2034561890',
+    plan: 'Sun Life Financial', claim: 'CLM-88422', copay: '$5.00',
+    orderState: 'new', checklistChecked: [false, false],
+    requestedAt: '3:15 PM', estimatedTime: '5 – 8 mins',
   },
   {
     id: '#GN-203',
@@ -113,22 +118,15 @@ const INITIAL_ORDERS: Order[] = [
     status: 'Verified',
     prescriptions: [
       { name: 'Metformin 500mg', form: 'Tablet', qty: 60, directions: 'Take 1 tablet twice daily with meals', ndc: '00093-1048-01', dea: 'Non-controlled', refills: 5 },
-      { name: 'Glipizide 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet daily 30 minutes before breakfast', ndc: '00049-1560-66', dea: 'Non-controlled', refills: 2 },
+      { name: 'Glipizide 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet 30 min before breakfast', ndc: '00049-1560-66', dea: 'Non-controlled', refills: 2 },
     ],
-    scriptCount: 2,
-    scriptLabel: 'Prescription',
-    time: '10:45 AM',
-    din: '07345219',
-    dob: 'Nov 3, 1975',
-    gender: 'Female',
-    phone: '(204) 555-0281',
-    address: '99 Osborne St, Winnipeg, MB R3L 1Y5',
-    allergies: 'Aspirin',
-    doctor: 'Dr. Maria Chen',
-    npi: '3012348765',
-    plan: 'Manulife',
-    claim: 'CLM-88423',
-    copay: '$18.75',
+    scriptCount: 2, scriptLabel: 'Prescription', time: '10:45 AM',
+    din: '07345219', dob: 'Nov 3, 1975', gender: 'Female', phone: '(204) 555-0281',
+    address: '99 Osborne St, Winnipeg, MB R3L 1Y5', allergies: 'Aspirin',
+    doctor: 'Dr. Maria Chen', npi: '3012348765',
+    plan: 'Manulife', claim: 'CLM-88423', copay: '$18.75',
+    orderState: 'new', checklistChecked: [false, false],
+    requestedAt: '10:45 AM', estimatedTime: '5 – 8 mins',
   },
   {
     id: '#GN-204',
@@ -138,28 +136,81 @@ const INITIAL_ORDERS: Order[] = [
     prescriptions: [
       { name: 'Vitamin D3 2000 IU', form: 'Softgel', qty: 90, directions: 'Take 1 softgel daily with a meal', ndc: '31604-0070-90', dea: 'Non-controlled', refills: 0 },
     ],
-    scriptCount: 1,
-    scriptLabel: 'Supplement',
-    time: '1:00 PM',
-    din: '04567128',
-    dob: 'Feb 9, 1995',
-    gender: 'Male',
-    phone: '(204) 555-0339',
-    address: '245 Portage Ave, Winnipeg, MB R3B 2A9',
-    allergies: 'Latex',
-    doctor: 'Dr. James Park',
-    npi: '4098123456',
-    plan: 'Great-West Life',
-    claim: 'CLM-88424',
-    copay: '$0.00',
+    scriptCount: 1, scriptLabel: 'Supplement', time: '1:00 PM',
+    din: '04567128', dob: 'Feb 9, 1995', gender: 'Male', phone: '(204) 555-0339',
+    address: '245 Portage Ave, Winnipeg, MB R3B 2A9', allergies: 'Latex',
+    doctor: 'Dr. James Park', npi: '4098123456',
+    plan: 'Great-West Life', claim: 'CLM-88424', copay: '$0.00',
+    orderState: 'new', checklistChecked: [false],
+    requestedAt: '1:00 PM', estimatedTime: '5 – 8 mins',
+  },
+  // ── Being Prepared ────────────────────────────────────────────────────────
+  {
+    id: '#GN-205',
+    patientName: 'Carlos Robert',
+    type: 'Rx',
+    status: 'Verified',
+    prescriptions: [
+      { name: 'Lisinopril 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-513-06', dea: 'Non-controlled', refills: 3 },
+      { name: 'Hydrochlorothiazide 25mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '00378-0214-01', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescriptions', time: '8:30 PM',
+    din: '08921345', dob: 'May 3, 1968', gender: 'Male', phone: '(512) 555-0234',
+    address: '500 Main St, Austin, TX 78701', allergies: 'None on file',
+    doctor: 'Dr. Karen Li', npi: '1098765432',
+    plan: 'Medicare Part D', claim: 'CLM-88425', copay: '$15.00',
+    orderState: 'preparing', checklistChecked: [true, false],
+    requestedAt: '8:30 PM', estimatedTime: '5 – 8 mins',
+  },
+  // ── Waiting for Driver (searching) ────────────────────────────────────────
+  {
+    id: '#GN-206',
+    patientName: 'Priya Sharma',
+    type: 'Rx',
+    status: 'Verified',
+    prescriptions: [
+      { name: 'Metoprolol 50mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet twice daily', ndc: '00378-0751-01', dea: 'Non-controlled', refills: 4 },
+      { name: 'Atorvastatin 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00071-0157-23', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescriptions', time: '2:15 PM',
+    din: '05678234', dob: 'Mar 12, 1979', gender: 'Female', phone: '(512) 555-0412',
+    address: '2800 S Congress Ave, Austin, TX 78704', allergies: 'Penicillin',
+    doctor: 'Dr. Sarah Wells', npi: '5021348976',
+    plan: 'Blue Shield', claim: 'CLM-88426', copay: '$22.00',
+    orderState: 'waiting-driver', checklistChecked: [true, true],
+    driver: undefined, requestedAt: '2:31 PM', estimatedTime: '5 – 8 mins',
+  },
+  // ── Waiting for Driver (driver found) ─────────────────────────────────────
+  {
+    id: '#GN-207',
+    patientName: 'James Wilson',
+    type: 'OTC',
+    status: 'Verified',
+    prescriptions: [
+      { name: 'Aspirin 81mg', form: 'Tablet', qty: 90, directions: 'Take 1 tablet daily', ndc: '00280-0402-04', dea: 'Non-controlled', refills: 0 },
+    ],
+    scriptCount: 1, scriptLabel: 'Over-the-Counter', time: '1:45 PM',
+    din: '03456891', dob: 'Aug 17, 1962', gender: 'Male', phone: '(512) 555-0677',
+    address: '100 Congress Ave, Austin, TX 78701', allergies: 'None known',
+    doctor: 'Dr. Tom Hughes', npi: '6034512897',
+    plan: 'Aetna', claim: 'CLM-88427', copay: '$0.00',
+    orderState: 'waiting-driver', checklistChecked: [true],
+    driver: MOCK_DRIVER, requestedAt: '2:20 PM', estimatedTime: '5 – 8 mins',
   },
 ]
 
 const BLOCKED_FILTERS = ['Insurance', 'Prescription', 'Out of Stock', 'Need Verification']
+const PROGRESS_STEPS = ['Receive', 'Preparing', 'Waiting driver', 'Transit']
 
-const PROGRESS_STEPS = ['Receive', 'Preparing', 'Waiting for driver', 'Transit']
+const SECTION_TITLES: Record<SidebarSection, string> = {
+  'new-order': 'New Orders',
+  'being-prepared': 'Being Prepared',
+  'waiting-driver': 'Waiting for Driver',
+  'in-transit': 'In Transit',
+  'delivered': 'Delivered',
+}
 
-// ── Tag helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function typeTagClass(type: OrderType) {
   if (type === 'Rx') return 'home__tag home__tag--teal'
@@ -168,11 +219,17 @@ function typeTagClass(type: OrderType) {
 }
 
 function statusTagClass(status: OrderStatus) {
-  if (status === 'Verified') return 'home__tag home__tag--green'
-  return 'home__tag home__tag--orange'
+  return status === 'Verified' ? 'home__tag home__tag--green' : 'home__tag home__tag--orange'
 }
 
-// ── Drug list (for card display) ──────────────────────────────────────────────
+function progressIndex(state: OrderState): number {
+  if (state === 'new') return 0
+  if (state === 'preparing') return 1
+  if (state === 'waiting-driver') return 2
+  return 3
+}
+
+// ── Drug list (card preview) ──────────────────────────────────────────────────
 
 function DrugList({ prescriptions }: { prescriptions: Prescription[] }) {
   const visible = prescriptions.slice(0, 2)
@@ -201,6 +258,7 @@ function OrderCard({
   selected?: boolean
   onClick: () => void
 }) {
+  const isWaiting = order.orderState === 'waiting-driver'
   return (
     <button
       className={['home__card', compact ? 'home__card--compact' : '', selected ? 'home__card--selected' : '']
@@ -211,11 +269,19 @@ function OrderCard({
     >
       <div className="home__card-row">
         <span className="home__card-id">{order.id}</span>
-        <span className={typeTagClass(order.type)}>{order.type}</span>
+        {isWaiting ? (
+          <InlineLoading
+            description="Waiting for driver..."
+            status="active"
+            className="home__card-loading"
+          />
+        ) : (
+          <span className={typeTagClass(order.type)}>{order.type}</span>
+        )}
       </div>
       <div className="home__card-row">
         <span className="home__card-patient">{order.patientName}</span>
-        <span className={statusTagClass(order.status)}>{order.status}</span>
+        {!isWaiting && <span className={statusTagClass(order.status)}>{order.status}</span>}
       </div>
       <DrugList prescriptions={order.prescriptions} />
       <div className="home__card-footer">
@@ -229,35 +295,72 @@ function OrderCard({
   )
 }
 
+// ── Collapsible section (used in Being Prepared / Waiting for Driver) ─────────
+
+function CollapsibleSection({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <section className="home__detail-section">
+      <button
+        className="home__section-toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span className="home__detail-section-title">{title}</span>
+        {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </button>
+      {open && <div className="home__section-body">{children}</div>}
+    </section>
+  )
+}
+
 // ── Detail Panel ──────────────────────────────────────────────────────────────
 
-function DetailPanel({ order, onClose, onAccept, onFlagIssues }: {
+function DetailPanel({
+  order,
+  onClose,
+  onAccept,
+  onFlagIssues,
+  onReadyForPickup,
+  onPackageHandoff,
+  onChecklistToggle,
+}: {
   order: Order
   onClose: () => void
   onAccept: () => void
   onFlagIssues: () => void
+  onReadyForPickup: () => void
+  onPackageHandoff: () => void
+  onChecklistToggle: (rxIndex: number, checked: boolean) => void
 }) {
-  const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set([0]))
+  const [openRxIndexes, setOpenRxIndexes] = useState<Set<number>>(new Set([0]))
 
-  const toggleAccordion = (i: number) => {
-    setOpenIndexes((prev) => {
+  const toggleRx = (i: number) => {
+    setOpenRxIndexes((prev) => {
       const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
+      next.has(i) ? next.delete(i) : next.add(i)
       return next
     })
   }
 
-  return (
-    <div className="home__detail">
-      {/* Close row */}
+  const allChecked = order.checklistChecked.every(Boolean)
+
+  // ── Header (shared across all states) ──────────────────────────────────────
+  const header = (
+    <>
       <div className="home__detail-close-row">
         <button className="home__detail-close" onClick={onClose} aria-label="Close">
           <Close size={20} />
         </button>
       </div>
-
-      {/* ID + name + tags */}
       <div className="home__detail-meta">
         <div className="home__detail-meta-left">
           <p className="home__detail-id">{order.id}</p>
@@ -268,100 +371,240 @@ function DetailPanel({ order, onClose, onAccept, onFlagIssues }: {
           <span className={statusTagClass(order.status)}>{order.status}</span>
         </div>
       </div>
-
-      {/* Progress indicator */}
       <div className="home__progress-wrap">
-        <ProgressIndicator currentIndex={0} spaceEqually>
+        <ProgressIndicator currentIndex={progressIndex(order.orderState)} spaceEqually>
           {PROGRESS_STEPS.map((step) => (
             <ProgressStep key={step} label={step} />
           ))}
         </ProgressIndicator>
       </div>
-
-      {/* Scrollable body */}
-      <div className="home__detail-body">
-        {/* Patient */}
-        <section className="home__detail-section">
-          <h3 className="home__detail-section-title">Patient</h3>
-          <DetailRow label="DIN" value={order.din} />
-          <DetailRow label="Date of birth" value={order.dob} />
-          <DetailRow label="Gender" value={order.gender} />
-          <DetailRow label="Phone" value={order.phone} />
-          <DetailRow label="Delivery address" value={order.address} />
-          <DetailRow label="Allergies" value={order.allergies} />
-        </section>
-
-        {/* Prescriptions */}
-        <section className="home__detail-section">
-          <div className="home__detail-section-header">
-            <h3 className="home__detail-section-title">Prescriptions</h3>
-            <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
-          </div>
-          {order.prescriptions.map((rx, i) => {
-            const isOpen = openIndexes.has(i)
-            return (
-              <div key={rx.name} className="home__accordion-item">
-                <button
-                  className="home__accordion"
-                  onClick={() => toggleAccordion(i)}
-                  aria-expanded={isOpen}
-                >
-                  <span>{rx.name}</span>
-                  {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-                {isOpen && (
-                  <div className="home__accordion-body">
-                    <div className="home__accordion-row">
-                      <span className="home__accordion-label">Form</span>
-                      <span className="home__accordion-value">
-                        {rx.form} · QTY {rx.qty}
-                      </span>
-                    </div>
-                    <div className="home__accordion-row">
-                      <span className="home__accordion-label">Directions</span>
-                      <span className="home__accordion-value">{rx.directions}</span>
-                    </div>
-                    <div className="home__accordion-row">
-                      <span className="home__accordion-label">NDC</span>
-                      <span className="home__accordion-value">{rx.ndc}</span>
-                    </div>
-                    <div className="home__accordion-row">
-                      <span className="home__accordion-label">DEA</span>
-                      <span className="home__accordion-value">{rx.dea}</span>
-                    </div>
-                    <div className="home__accordion-row">
-                      <span className="home__accordion-label">Refills</span>
-                      <span className="home__accordion-value">{rx.refills} remaining</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </section>
-
-        {/* Insurance & Payment */}
-        <section className="home__detail-section">
-          <h3 className="home__detail-section-title">Insurance &amp; Payment</h3>
-          <DetailRow label="Plan" value={order.plan} />
-          <DetailRow label="Claim" value={order.claim} />
-          <DetailRow label="Total copay" value={order.copay} />
-        </section>
-      </div>
-
-      {/* Footer */}
-      <div className="home__detail-footer">
-        <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
-          <Warning size={16} />
-          Flag Issues
-        </button>
-        <button className="home__detail-btn home__detail-btn--accept" onClick={onAccept}>
-          Accept &amp; Prepare
-          <ArrowRight size={16} />
-        </button>
-      </div>
-    </div>
+    </>
   )
+
+  // ── New Orders body ────────────────────────────────────────────────────────
+  if (order.orderState === 'new') {
+    return (
+      <div className="home__detail">
+        {header}
+        <div className="home__detail-body">
+          <section className="home__detail-section">
+            <h3 className="home__detail-section-title">Patient</h3>
+            <DetailRow label="DIN" value={order.din} />
+            <DetailRow label="Date of birth" value={order.dob} />
+            <DetailRow label="Gender" value={order.gender} />
+            <DetailRow label="Phone" value={order.phone} />
+            <DetailRow label="Delivery address" value={order.address} />
+            <DetailRow label="Allergies" value={order.allergies} />
+          </section>
+          <section className="home__detail-section">
+            <div className="home__detail-section-header">
+              <h3 className="home__detail-section-title">Prescriptions</h3>
+              <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
+            </div>
+            {order.prescriptions.map((rx, i) => {
+              const isOpen = openRxIndexes.has(i)
+              return (
+                <div key={rx.name} className="home__accordion-item">
+                  <button className="home__accordion" onClick={() => toggleRx(i)} aria-expanded={isOpen}>
+                    <span>{rx.name}</span>
+                    {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  {isOpen && (
+                    <div className="home__accordion-body">
+                      <div className="home__accordion-row"><span className="home__accordion-label">Form</span><span className="home__accordion-value">{rx.form} · QTY {rx.qty}</span></div>
+                      <div className="home__accordion-row"><span className="home__accordion-label">Directions</span><span className="home__accordion-value">{rx.directions}</span></div>
+                      <div className="home__accordion-row"><span className="home__accordion-label">NDC</span><span className="home__accordion-value">{rx.ndc}</span></div>
+                      <div className="home__accordion-row"><span className="home__accordion-label">DEA</span><span className="home__accordion-value">{rx.dea}</span></div>
+                      <div className="home__accordion-row"><span className="home__accordion-label">Refills</span><span className="home__accordion-value">{rx.refills} remaining</span></div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </section>
+          <section className="home__detail-section">
+            <h3 className="home__detail-section-title">Insurance &amp; Payment</h3>
+            <DetailRow label="Plan" value={order.plan} />
+            <DetailRow label="Claim" value={order.claim} />
+            <DetailRow label="Total copay" value={order.copay} />
+          </section>
+        </div>
+        <div className="home__detail-footer">
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
+            <Warning size={16} /> Flag Issues
+          </button>
+          <button className="home__detail-btn home__detail-btn--accept" onClick={onAccept}>
+            Accept &amp; Prepare <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Being Prepared body ────────────────────────────────────────────────────
+  if (order.orderState === 'preparing') {
+    return (
+      <div className="home__detail">
+        {header}
+        <div className="home__detail-body">
+          <CollapsibleSection title="Patient">
+            <DetailRow label="DIN" value={order.din} />
+            <DetailRow label="Date of birth" value={order.dob} />
+            <DetailRow label="Gender" value={order.gender} />
+            <DetailRow label="Phone" value={order.phone} />
+            <DetailRow label="Delivery address" value={order.address} />
+            <DetailRow label="Allergies" value={order.allergies} />
+          </CollapsibleSection>
+
+          {/* Prescriptions with checklist */}
+          <section className="home__detail-section">
+            <div className="home__detail-section-header">
+              <div>
+                <h3 className="home__detail-section-title">Prescriptions</h3>
+                <p className="home__detail-section-sub">Check each item as you fill it</p>
+              </div>
+              <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
+            </div>
+            {order.prescriptions.map((rx, i) => {
+              const isOpen = openRxIndexes.has(i)
+              const checked = order.checklistChecked[i]
+              return (
+                <div key={rx.name} className="home__rx-row">
+                  <Checkbox
+                    id={`rx-${order.id}-${i}`}
+                    labelText=""
+                    hideLabel
+                    checked={checked}
+                    onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
+                      onChecklistToggle(i, evt.target.checked)
+                    }
+                    className="home__rx-checkbox"
+                  />
+                  <div className="home__accordion-item home__accordion-item--flex">
+                    <button
+                      className={['home__accordion', checked ? 'home__accordion--checked' : ''].filter(Boolean).join(' ')}
+                      onClick={() => toggleRx(i)}
+                      aria-expanded={isOpen}
+                    >
+                      <span>{rx.name}</span>
+                      {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    {isOpen && (
+                      <div className="home__accordion-body">
+                        <div className="home__accordion-row"><span className="home__accordion-label">Form</span><span className="home__accordion-value">{rx.form} · QTY {rx.qty}</span></div>
+                        <div className="home__accordion-row"><span className="home__accordion-label">Directions</span><span className="home__accordion-value">{rx.directions}</span></div>
+                        <div className="home__accordion-row"><span className="home__accordion-label">NDC</span><span className="home__accordion-value">{rx.ndc}</span></div>
+                        <div className="home__accordion-row"><span className="home__accordion-label">DEA</span><span className="home__accordion-value">{rx.dea}</span></div>
+                        <div className="home__accordion-row"><span className="home__accordion-label">Refills</span><span className="home__accordion-value">{rx.refills} remaining</span></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </section>
+
+          <CollapsibleSection title="Insurance &amp; Payment">
+            <DetailRow label="Plan" value={order.plan} />
+            <DetailRow label="Claim" value={order.claim} />
+            <DetailRow label="Total copay" value={order.copay} />
+          </CollapsibleSection>
+        </div>
+        <div className="home__detail-footer">
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
+            <Warning size={16} /> Flag Issues
+          </button>
+          <button
+            className={['home__detail-btn', allChecked ? 'home__detail-btn--accept' : 'home__detail-btn--disabled'].join(' ')}
+            onClick={allChecked ? onReadyForPickup : undefined}
+            disabled={!allChecked}
+            aria-disabled={!allChecked}
+          >
+            Ready for Pickup <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Waiting for Driver body ────────────────────────────────────────────────
+  if (order.orderState === 'waiting-driver') {
+    const driverFound = !!order.driver
+    return (
+      <div className="home__detail">
+        {header}
+        <div className="home__detail-body">
+          <CollapsibleSection title="Patient">
+            <DetailRow label="DIN" value={order.din} />
+            <DetailRow label="Date of birth" value={order.dob} />
+            <DetailRow label="Gender" value={order.gender} />
+            <DetailRow label="Phone" value={order.phone} />
+            <DetailRow label="Delivery address" value={order.address} />
+            <DetailRow label="Allergies" value={order.allergies} />
+          </CollapsibleSection>
+          <CollapsibleSection title="Prescriptions">
+            <div className="home__detail-section-header" style={{ marginBottom: '8px' }}>
+              <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
+            </div>
+            {order.prescriptions.map((rx) => (
+              <p key={rx.name} className="home__detail-rx-name">{rx.name}</p>
+            ))}
+          </CollapsibleSection>
+          <CollapsibleSection title="Insurance &amp; Payment">
+            <DetailRow label="Plan" value={order.plan} />
+            <DetailRow label="Claim" value={order.claim} />
+            <DetailRow label="Total copay" value={order.copay} />
+          </CollapsibleSection>
+
+          {/* Driver section */}
+          <section className="home__detail-section home__driver-section">
+            <h3 className="home__detail-section-title">Driver</h3>
+            {driverFound ? (
+              <>
+                <InlineLoading
+                  description="Driver found"
+                  status="finished"
+                  className="home__driver-status"
+                />
+                <DetailRow label="Name" value={order.driver!.name} />
+                <DetailRow label="Phone" value={order.driver!.phone} />
+                <DetailRow label="Pickup ETA" value={order.driver!.pickupEta} />
+                <DetailRow label="Assigned at" value={order.driver!.assignedAt} />
+              </>
+            ) : (
+              <>
+                <InlineLoading
+                  description="Looking for a nearby driver..."
+                  status="active"
+                  className="home__driver-status"
+                />
+                <p className="home__driver-note">
+                  Order is ready at the counter. A driver will be assigned automatically — no action needed.
+                </p>
+                <DetailRow label="Requested" value={order.requestedAt ?? '—'} />
+                <DetailRow label="Time estimated" value={order.estimatedTime ?? '—'} />
+              </>
+            )}
+          </section>
+        </div>
+        <div className="home__detail-footer">
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
+            <Warning size={16} /> Flag Issues
+          </button>
+          <button
+            className={['home__detail-btn', driverFound ? 'home__detail-btn--accept' : 'home__detail-btn--disabled'].join(' ')}
+            onClick={driverFound ? onPackageHandoff : undefined}
+            disabled={!driverFound}
+            aria-disabled={!driverFound}
+          >
+            Package Handoff <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -399,35 +642,102 @@ export default function HomePage() {
   const [blockedFilter, setBlockedFilter] = useState<string | null>(null)
   const [section, setSection] = useState<SidebarSection>('new-order')
   const [acceptingOrders, setAcceptingOrders] = useState(true)
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS)
-  const [blockedOrders, setBlockedOrders] = useState<Order[]>([])
+  const [allOrders, setAllOrders] = useState<Order[]>(INITIAL_ORDERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const selectedOrder = orders.find((o) => o.id === selectedId) ?? null
+  // Auto-assign driver after 8s for any waiting-driver order without one
+  const waitingNoDriverKey = allOrders
+    .filter((o) => o.orderState === 'waiting-driver' && !o.driver)
+    .map((o) => o.id)
+    .join(',')
+
+  useEffect(() => {
+    if (!waitingNoDriverKey) return
+    const ids = waitingNoDriverKey.split(',')
+    const timers = ids.map((id) =>
+      window.setTimeout(() => {
+        setAllOrders((prev) =>
+          prev.map((o) => (o.id === id ? { ...o, driver: MOCK_DRIVER } : o))
+        )
+      }, 8000)
+    )
+    return () => timers.forEach(clearTimeout)
+  }, [waitingNoDriverKey])
+
+  const ordersForSection = (s: SidebarSection): Order[] => {
+    switch (s) {
+      case 'new-order':       return allOrders.filter((o) => o.orderState === 'new')
+      case 'being-prepared':  return allOrders.filter((o) => o.orderState === 'preparing')
+      case 'waiting-driver':  return allOrders.filter((o) => o.orderState === 'waiting-driver')
+      default: return []
+    }
+  }
+
+  const countOf = (state: OrderState) => allOrders.filter((o) => o.orderState === state).length
+  const blockedOrders = allOrders.filter((o) => o.orderState === 'blocked')
+
+  const displayOrders = activeTab === 'blocked'
+    ? blockedOrders
+    : ordersForSection(section)
+
+  const selectedOrder = allOrders.find((o) => o.id === selectedId) ?? null
+  const showDetail = !!selectedId && !!selectedOrder
+
+  const changeSection = (s: SidebarSection) => {
+    setSection(s)
+    setSelectedId(null)
+  }
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const updateOrder = (id: string, patch: Partial<Order>) =>
+    setAllOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)))
 
   const handleAccept = () => {
     if (!selectedId) return
-    setOrders((prev) => prev.filter((o) => o.id !== selectedId))
-    setSelectedId(null)
+    updateOrder(selectedId, {
+      orderState: 'preparing',
+      checklistChecked: allOrders.find((o) => o.id === selectedId)!.prescriptions.map(() => false),
+    })
+    setSection('being-prepared')
   }
 
   const handleFlagIssues = () => {
     if (!selectedId) return
-    const order = orders.find((o) => o.id === selectedId)
-    if (order) {
-      setBlockedOrders((prev) => [...prev, order])
-      setOrders((prev) => prev.filter((o) => o.id !== selectedId))
-    }
+    updateOrder(selectedId, { orderState: 'blocked' })
     setSelectedId(null)
+    setSection('new-order')
   }
 
-  const showDetail = selectedId !== null && selectedOrder !== null
-  const isNewOrder = section === 'new-order' && activeTab === 'active'
-  const displayOrders = isNewOrder ? orders : []
+  const handleReadyForPickup = () => {
+    if (!selectedId) return
+    updateOrder(selectedId, {
+      orderState: 'waiting-driver',
+      driver: undefined,
+      requestedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    })
+    setSection('waiting-driver')
+  }
+
+  const handlePackageHandoff = () => {
+    if (!selectedId) return
+    updateOrder(selectedId, { orderState: 'delivered' })
+    setSelectedId(null)
+    setSection('delivered')
+  }
+
+  const handleChecklistToggle = (rxIndex: number, checked: boolean) => {
+    if (!selectedId) return
+    const order = allOrders.find((o) => o.id === selectedId)
+    if (!order) return
+    const newChecked = [...order.checklistChecked]
+    newChecked[rxIndex] = checked
+    updateOrder(selectedId, { checklistChecked: newChecked })
+  }
 
   return (
     <div className="home">
-      {/* ── App Header ──────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="home__header">
         <div className="home__header-left">
           <span className="home__pharmacy-name">Shoppers Drug Mart Pembina &amp; Point</span>
@@ -435,7 +745,7 @@ export default function HomePage() {
         <div className="home__header-center">
           <div className="home__search">
             <Search size={16} className="home__search-icon" />
-            <input className="home__search-input" placeholder="Search input text" />
+            <input className="home__search-input" placeholder="Search orders, patients, drug, or order ID..." />
           </div>
         </div>
         <div className="home__header-right">
@@ -452,15 +762,15 @@ export default function HomePage() {
           <div className="home__tabs">
             <button
               className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')}
-              onClick={() => { setActiveTab('active'); setBlockedFilter(null) }}
+              onClick={() => { setActiveTab('active'); setBlockedFilter(null); setSelectedId(null) }}
             >
               Active
             </button>
             <button
               className={['home__tab', activeTab === 'blocked' ? 'home__tab--active' : ''].filter(Boolean).join(' ')}
-              onClick={() => setActiveTab('blocked')}
+              onClick={() => { setActiveTab('blocked'); setSelectedId(null) }}
             >
-              Blocked
+              Blocked ({blockedOrders.length})
             </button>
           </div>
 
@@ -481,11 +791,14 @@ export default function HomePage() {
           <nav className="home__nav">
             {activeTab === 'active' ? (
               <>
-                <NavItem label="New order" count={orders.length} active={section === 'new-order'} onClick={() => setSection('new-order')} />
-                <NavItem label="Being Prepared" count={0} active={section === 'being-prepared'} onClick={() => setSection('being-prepared')} />
-                <NavItem label="Waiting for Driver" active={section === 'waiting-driver'} onClick={() => setSection('waiting-driver')} />
-                <NavItem label="In transit" active={section === 'in-transit'} onClick={() => setSection('in-transit')} />
-                <NavItem label="Delivered" count={8} active={section === 'delivered'} onClick={() => setSection('delivered')} />
+                <NavItem label="New order" count={countOf('new')} active={section === 'new-order'} onClick={() => changeSection('new-order')} />
+                <NavItem label="Being Prepared" count={countOf('preparing')} active={section === 'being-prepared'} onClick={() => changeSection('being-prepared')} />
+                <NavItem label="Waiting for Driver" count={countOf('waiting-driver')} active={section === 'waiting-driver'} onClick={() => changeSection('waiting-driver')} />
+                <NavItem label="In transit" active={section === 'in-transit'} onClick={() => changeSection('in-transit')} />
+                <NavItem label="Delivered" count={countOf('delivered')} active={section === 'delivered'} onClick={() => changeSection('delivered')} />
+                <div className="home__nav-divider" />
+                <NavItem label="History" active={false} onClick={() => {}} />
+                <NavItem label="Setting" active={false} onClick={() => {}} />
               </>
             ) : (
               <NavItem label="Blocked" count={blockedOrders.length} active onClick={() => {}} />
@@ -508,25 +821,14 @@ export default function HomePage() {
           </div>
         </aside>
 
-        {/* ── Content Area ─────────────────────────────────────────────────── */}
+        {/* ── Content ──────────────────────────────────────────────────────── */}
         <main className="home__content">
-          {activeTab === 'blocked' ? (
-            blockedOrders.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <div className="home__grid">
-                {blockedOrders.map((o) => (
-                  <OrderCard key={o.id} order={o} onClick={() => {}} />
-                ))}
-              </div>
-            )
-          ) : section !== 'new-order' ? (
-            <EmptyState />
-          ) : displayOrders.length === 0 ? (
+          {displayOrders.length === 0 ? (
             <EmptyState />
           ) : showDetail ? (
             <div className="home__split">
               <div className="home__list">
+                <p className="home__list-title">{SECTION_TITLES[section]}</p>
                 {displayOrders.map((o) => (
                   <OrderCard
                     key={o.id}
@@ -538,18 +840,25 @@ export default function HomePage() {
                 ))}
               </div>
               <DetailPanel
+                key={selectedOrder!.id}
                 order={selectedOrder!}
                 onClose={() => setSelectedId(null)}
                 onAccept={handleAccept}
                 onFlagIssues={handleFlagIssues}
+                onReadyForPickup={handleReadyForPickup}
+                onPackageHandoff={handlePackageHandoff}
+                onChecklistToggle={handleChecklistToggle}
               />
             </div>
           ) : (
-            <div className="home__grid">
-              {displayOrders.map((o) => (
-                <OrderCard key={o.id} order={o} onClick={() => setSelectedId(o.id)} />
-              ))}
-            </div>
+            <>
+              <p className="home__content-title">{SECTION_TITLES[section]}</p>
+              <div className="home__grid">
+                {displayOrders.map((o) => (
+                  <OrderCard key={o.id} order={o} onClick={() => setSelectedId(o.id)} />
+                ))}
+              </div>
+            </>
           )}
         </main>
       </div>
@@ -557,17 +866,7 @@ export default function HomePage() {
   )
 }
 
-function NavItem({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string
-  count?: number
-  active: boolean
-  onClick: () => void
-}) {
+function NavItem({ label, count, active, onClick }: { label: string; count?: number; active: boolean; onClick: () => void }) {
   return (
     <button
       className={['home__nav-item', active ? 'home__nav-item--active' : ''].filter(Boolean).join(' ')}

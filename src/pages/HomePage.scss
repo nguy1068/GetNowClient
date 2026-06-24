@@ -667,6 +667,154 @@
       background-color: #0050e6;
     }
   }
+
+  &--disabled {
+    background-color: $layer-02;
+    color: $text-disabled;
+    cursor: not-allowed;
+  }
+}
+
+// ── Collapsible section toggle ────────────────────────────────────────────────
+
+.home__section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: $icon-primary;
+
+  .home__detail-section-title {
+    margin: 0;
+  }
+
+  &:hover .home__detail-section-title {
+    color: $interactive;
+  }
+}
+
+.home__section-body {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-04;
+  padding-top: $spacing-04;
+}
+
+// ── Detail section sub-heading ────────────────────────────────────────────────
+
+.home__detail-section-sub {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: $spacing-01 0 0;
+}
+
+// ── Prescription checklist row ────────────────────────────────────────────────
+
+.home__rx-row {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-04;
+}
+
+.home__rx-checkbox {
+  flex-shrink: 0;
+  margin-top: 14px; // vertically align checkbox with accordion header text
+
+  // Remove Carbon's default label margin when hidden
+  .cds--checkbox-label {
+    padding-left: 0;
+  }
+}
+
+.home__accordion-item--flex {
+  flex: 1;
+  min-width: 0;
+}
+
+.home__accordion--checked {
+  background-color: #defbe6;
+
+  &:hover {
+    background-color: #b6f6c8;
+  }
+}
+
+// ── Driver section ────────────────────────────────────────────────────────────
+
+.home__driver-section {
+  gap: $spacing-04;
+}
+
+.home__driver-status {
+  margin: 0;
+}
+
+.home__driver-note {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ── Inline loading in card (waiting state) ────────────────────────────────────
+
+.home__card-loading {
+  // Override Carbon's InlineLoading default height/padding
+  .cds--inline-loading {
+    min-height: auto;
+  }
+
+  .cds--inline-loading__text {
+    @include type-style('label-01');
+    color: $text-secondary;
+  }
+}
+
+// ── Content / list titles ─────────────────────────────────────────────────────
+
+.home__content-title,
+.home__list-title {
+  @include type-style('heading-04');
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 $spacing-05;
+  padding: $spacing-05 $spacing-05 0;
+}
+
+.home__list-title {
+  padding: $spacing-05 0 0;
+  flex-shrink: 0;
+}
+
+.home__content-title {
+  padding: $spacing-05;
+  padding-bottom: 0;
+}
+
+// ── Nav divider ───────────────────────────────────────────────────────────────
+
+.home__nav-divider {
+  height: 1px;
+  background-color: $border-subtle-01;
+  margin: $spacing-03 0;
+}
+
+// ── Detail rx name (in collapsed prescriptions) ───────────────────────────────
+
+.home__detail-rx-name {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  margin: 0;
+  padding: $spacing-02 0;
+
+  & + & {
+    border-top: 1px solid $border-subtle-01;
+  }
 }
 
 // ── Empty state ───────────────────────────────────────────────────────────────

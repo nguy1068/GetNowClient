@@ -137,7 +137,21 @@ export default function PmsConnectionPage({ onBack, onNext }: PmsConnectionPageP
               <>
                 <div className="pms__info-tile">
                   <p className="pms__info-tile-title">How to find your API key</p>
-                  <p className="pms__info-tile-body">{PMS_INSTRUCTIONS[selectedPms]}</p>
+                  <p className="pms__info-tile-body">
+                    {(() => {
+                      const label = pmsOption?.label ?? ''
+                      const instr = PMS_INSTRUCTIONS[selectedPms]
+                      const idx = instr.indexOf(label)
+                      if (idx < 0) return instr
+                      return (
+                        <>
+                          {instr.slice(0, idx)}
+                          <span className="pms__name-link">{label}</span>
+                          {instr.slice(idx + label.length)}
+                        </>
+                      )
+                    })()}
+                  </p>
                 </div>
 
                 <TextInput

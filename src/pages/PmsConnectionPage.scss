@@ -19,7 +19,7 @@
 // ── PMS info tile ────────────────────────────────────────────────────────────
 
 .pms__info-tile {
-  background-color: $layer-02;
+  background-color: $field-01;
   padding: $spacing-05;
 }
 
@@ -35,6 +35,11 @@
   color: $text-secondary;
   margin: 0;
   line-height: 1.5;
+}
+
+.pms__name-link {
+  color: $link-primary;
+  text-decoration: underline;
 }
 
 // ── Test connection row ───────────────────────────────────────────────────────

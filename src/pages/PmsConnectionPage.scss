@@ -1,0 +1,59 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+// Completed sidebar step — same visual treatment as active (blue border + icon)
+.onboarding__step--complete {
+  border-left-color: $interactive;
+
+  .onboarding__step-icon {
+    color: $interactive;
+  }
+}
+
+// Footer variant with Back + Next on opposite ends
+.onboarding__footer--spaced {
+  justify-content: space-between;
+}
+
+// ── PMS info tile ────────────────────────────────────────────────────────────
+
+.pms__info-tile {
+  background-color: $layer-02;
+  padding: $spacing-05;
+}
+
+.pms__info-tile-title {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 $spacing-03;
+}
+
+.pms__info-tile-body {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ── Test connection row ───────────────────────────────────────────────────────
+
+.pms__test-row {
+  display: flex;
+  align-items: center;
+}
+
+// ── Success badge (replaces Test Connection button on success) ───────────────
+
+.pms__success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-03;
+  padding: $spacing-03 $spacing-05;
+  border: 1px solid #24a148;
+  background-color: #defbe6;
+  color: #198038;
+  @include type-style('body-compact-01');
+  font-weight: 400;
+}

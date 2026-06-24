@@ -76,7 +76,11 @@ function validate(form: FormFields): FormErrors {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function OnboardingPage() {
+interface OnboardingPageProps {
+  onNext?: () => void
+}
+
+export default function OnboardingPage({ onNext }: OnboardingPageProps) {
   const [form, setForm] = useState<FormFields>({
     pharmacyName: '',
     streetAddress: '',
@@ -113,8 +117,7 @@ export default function OnboardingPage() {
     const fieldErrors = validate(form)
     setErrors(fieldErrors)
     if (Object.keys(fieldErrors).length === 0) {
-      // TODO: advance to next onboarding step
-      alert('All fields valid — proceeding to next step.')
+      onNext?.()
     }
   }
 

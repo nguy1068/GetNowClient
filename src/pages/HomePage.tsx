@@ -7,7 +7,9 @@ import {
   Medication,
   Document,
   ChevronDown,
-  ChevronRight,
+  ChevronUp,
+  Warning,
+  ArrowRight,
 } from '@carbon/icons-react'
 import './HomePage.scss'
 
@@ -17,8 +19,14 @@ type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
 type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'delivered'
 
-interface Drug {
+interface Prescription {
   name: string
+  form: string
+  qty: number
+  directions: string
+  ndc: string
+  dea: string
+  refills: number
 }
 
 interface Order {
@@ -26,19 +34,21 @@ interface Order {
   patientName: string
   type: OrderType
   status: OrderStatus
-  drugs: Drug[]
+  prescriptions: Prescription[]
   scriptCount: number
   scriptLabel: string
   time: string
-  // detail panel
+  // patient detail
   din: string
   dob: string
   gender: string
   phone: string
   address: string
   allergies: string
+  // prescriptions
   doctor: string
   npi: string
+  // insurance
   plan: string
   claim: string
   copay: string
@@ -52,32 +62,39 @@ const INITIAL_ORDERS: Order[] = [
     patientName: 'Margaret Holloway',
     type: 'Rx',
     status: 'Verified',
-    drugs: [{ name: 'Lisinopril 10mg' }, { name: 'Lisinopril 20mg' }, { name: 'Atorvastatin 40mg' }],
+    prescriptions: [
+      { name: 'Amlodipine 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet by mouth once daily', ndc: '00069-1530-66', dea: 'Non-controlled', refills: 5 },
+      { name: 'Ramipril 5mg', form: 'Capsule', qty: 30, directions: 'Take 1 capsule by mouth once daily', ndc: '00071-0221-23', dea: 'Non-controlled', refills: 3 },
+      { name: 'Rosuvastatin 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet by mouth at bedtime', ndc: '00310-0751-90', dea: 'Non-controlled', refills: 2 },
+    ],
     scriptCount: 1,
     scriptLabel: 'Prescription',
     time: '7:30 PM',
-    din: 'DIN-0123456',
-    dob: 'Mar 14, 1962',
+    din: '09837812',
+    dob: 'July 12, 1953 (age 71)',
     gender: 'Female',
-    phone: '(204) 555-0192',
-    address: '1481 Pembina Hwy, Winnipeg, MB R3T 2C6',
-    allergies: 'Penicillin, Sulfa drugs',
+    phone: '(512) 555-0183',
+    address: '1204 Enfield Rd, Apt 8, Austin',
+    allergies: 'None on file',
     doctor: 'Dr. Karen Li',
     npi: '1098765432',
-    plan: 'Blue Cross Manitoba',
-    claim: 'CLM-88421',
-    copay: '$12.50',
+    plan: 'Medicare Part D — Humana Walmart Rx Plan',
+    claim: 'Approval',
+    copay: '$32.00',
   },
   {
     id: '#GN-202',
     patientName: 'Jamal Thompson',
     type: 'OTC',
     status: 'Pending',
-    drugs: [{ name: 'Ibuprofen 200mg' }, { name: 'Acetaminophen 500mg' }],
+    prescriptions: [
+      { name: 'Ibuprofen 200mg', form: 'Tablet', qty: 24, directions: 'Take 1-2 tablets every 4-6 hours as needed', ndc: '00573-0168-27', dea: 'Non-controlled', refills: 0 },
+      { name: 'Acetaminophen 500mg', form: 'Tablet', qty: 50, directions: 'Take 2 tablets every 6 hours as needed', ndc: '50580-0449-36', dea: 'Non-controlled', refills: 0 },
+    ],
     scriptCount: 1,
     scriptLabel: 'Over-the-Counter',
     time: '3:15 PM',
-    din: 'DIN-0234567',
+    din: '06219834',
     dob: 'Jul 22, 1988',
     gender: 'Male',
     phone: '(204) 555-0147',
@@ -94,11 +111,14 @@ const INITIAL_ORDERS: Order[] = [
     patientName: 'Sofia Martinez',
     type: 'OTC',
     status: 'Verified',
-    drugs: [{ name: 'Metformin 500mg' }, { name: 'Glipizide 5mg' }],
+    prescriptions: [
+      { name: 'Metformin 500mg', form: 'Tablet', qty: 60, directions: 'Take 1 tablet twice daily with meals', ndc: '00093-1048-01', dea: 'Non-controlled', refills: 5 },
+      { name: 'Glipizide 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet daily 30 minutes before breakfast', ndc: '00049-1560-66', dea: 'Non-controlled', refills: 2 },
+    ],
     scriptCount: 2,
     scriptLabel: 'Prescription',
     time: '10:45 AM',
-    din: 'DIN-0345678',
+    din: '07345219',
     dob: 'Nov 3, 1975',
     gender: 'Female',
     phone: '(204) 555-0281',
@@ -115,11 +135,13 @@ const INITIAL_ORDERS: Order[] = [
     patientName: "Liam O'Connor",
     type: 'Supplement',
     status: 'Verified',
-    drugs: [{ name: 'Vitamin D3 2000 IU' }],
+    prescriptions: [
+      { name: 'Vitamin D3 2000 IU', form: 'Softgel', qty: 90, directions: 'Take 1 softgel daily with a meal', ndc: '31604-0070-90', dea: 'Non-controlled', refills: 0 },
+    ],
     scriptCount: 1,
     scriptLabel: 'Supplement',
     time: '1:00 PM',
-    din: 'DIN-0456789',
+    din: '04567128',
     dob: 'Feb 9, 1995',
     gender: 'Male',
     phone: '(204) 555-0339',
@@ -135,6 +157,8 @@ const INITIAL_ORDERS: Order[] = [
 
 const BLOCKED_FILTERS = ['Insurance', 'Prescription', 'Out of Stock', 'Need Verification']
 
+const PROGRESS_STEPS = ['Receive', 'Preparing', 'In transit', 'Completed']
+
 // ── Tag helpers ───────────────────────────────────────────────────────────────
 
 function typeTagClass(type: OrderType) {
@@ -148,16 +172,16 @@ function statusTagClass(status: OrderStatus) {
   return 'home__tag home__tag--orange'
 }
 
-// ── Drug list (truncated) ─────────────────────────────────────────────────────
+// ── Drug list (for card display) ──────────────────────────────────────────────
 
-function DrugList({ drugs }: { drugs: Drug[] }) {
-  const visible = drugs.slice(0, 2)
-  const extra = drugs.length - 2
+function DrugList({ prescriptions }: { prescriptions: Prescription[] }) {
+  const visible = prescriptions.slice(0, 2)
+  const extra = prescriptions.length - 2
   return (
     <div className="home__drug-list">
       <Medication size={16} className="home__drug-icon" />
       <span className="home__drug-names">
-        {visible.map((d) => d.name).join('; ')}
+        {visible.map((p) => p.name).join('; ')}
         {extra > 0 && <span className="home__drug-more"> +{extra} more</span>}
       </span>
     </div>
@@ -193,7 +217,7 @@ function OrderCard({
         <span className="home__card-patient">{order.patientName}</span>
         <span className={statusTagClass(order.status)}>{order.status}</span>
       </div>
-      <DrugList drugs={order.drugs} />
+      <DrugList prescriptions={order.prescriptions} />
       <div className="home__card-footer">
         <span className="home__card-script">
           <Document size={16} className="home__card-script-icon" />
@@ -207,46 +231,61 @@ function OrderCard({
 
 // ── Detail Panel ──────────────────────────────────────────────────────────────
 
-function DetailPanel({ order, onClose, onAccept, onDecline }: {
+function DetailPanel({ order, onClose, onAccept, onFlagIssues }: {
   order: Order
   onClose: () => void
   onAccept: () => void
-  onDecline: () => void
+  onFlagIssues: () => void
 }) {
-  const [openScript, setOpenScript] = useState(true)
+  const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set([0]))
+
+  const toggleAccordion = (i: number) => {
+    setOpenIndexes((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
 
   return (
     <div className="home__detail">
-      {/* Header */}
-      <div className="home__detail-header">
-        <div className="home__detail-title-row">
-          <div>
-            <p className="home__detail-id">{order.id}</p>
-            <p className="home__detail-name">{order.patientName}</p>
-          </div>
-          <button className="home__detail-close" onClick={onClose} aria-label="Close">
-            <Close size={20} />
-          </button>
+      {/* Close row */}
+      <div className="home__detail-close-row">
+        <button className="home__detail-close" onClick={onClose} aria-label="Close">
+          <Close size={20} />
+        </button>
+      </div>
+
+      {/* ID + name + tags */}
+      <div className="home__detail-meta">
+        <div className="home__detail-meta-left">
+          <p className="home__detail-id">{order.id}</p>
+          <p className="home__detail-name">{order.patientName}</p>
         </div>
-        <div className="home__detail-tags">
+        <div className="home__detail-meta-tags">
           <span className={typeTagClass(order.type)}>{order.type}</span>
           <span className={statusTagClass(order.status)}>{order.status}</span>
         </div>
-        {/* Progress steps */}
-        <div className="home__progress">
-          {['Order Received', 'Being Prepared', 'Waiting for Driver', 'Delivered'].map((step, i) => (
-            <div key={step} className={['home__progress-step', i === 0 ? 'home__progress-step--active' : ''].filter(Boolean).join(' ')}>
-              <div className="home__progress-dot" />
-              <span className="home__progress-label">{step}</span>
-              {i < 3 && <div className="home__progress-line" />}
-            </div>
-          ))}
-        </div>
+      </div>
+
+      {/* Progress steps */}
+      <div className="home__progress">
+        {PROGRESS_STEPS.map((step, i) => (
+          <div
+            key={step}
+            className={['home__progress-step', i === 0 ? 'home__progress-step--active' : ''].filter(Boolean).join(' ')}
+          >
+            {i > 0 && <div className="home__progress-line home__progress-line--before" />}
+            <div className="home__progress-dot" />
+            <span className="home__progress-label">{step}</span>
+          </div>
+        ))}
       </div>
 
       {/* Scrollable body */}
       <div className="home__detail-body">
-        {/* Patient Info */}
+        {/* Patient */}
         <section className="home__detail-section">
           <h3 className="home__detail-section-title">Patient</h3>
           <DetailRow label="DIN" value={order.din} />
@@ -259,41 +298,71 @@ function DetailPanel({ order, onClose, onAccept, onDecline }: {
 
         {/* Prescriptions */}
         <section className="home__detail-section">
-          <h3 className="home__detail-section-title">Prescriptions</h3>
-          <p className="home__detail-doctor">{order.doctor} · NPI {order.npi}</p>
-          <button
-            className="home__accordion"
-            onClick={() => setOpenScript((v) => !v)}
-            aria-expanded={openScript}
-          >
-            <span>{order.drugs[0]?.name}</span>
-            {openScript ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-          </button>
-          {openScript && (
-            <div className="home__accordion-body">
-              {order.drugs.map((d) => (
-                <p key={d.name} className="home__accordion-item">{d.name}</p>
-              ))}
-            </div>
-          )}
+          <div className="home__detail-section-header">
+            <h3 className="home__detail-section-title">Prescriptions</h3>
+            <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
+          </div>
+          {order.prescriptions.map((rx, i) => {
+            const isOpen = openIndexes.has(i)
+            return (
+              <div key={rx.name} className="home__accordion-item">
+                <button
+                  className="home__accordion"
+                  onClick={() => toggleAccordion(i)}
+                  aria-expanded={isOpen}
+                >
+                  <span>{rx.name}</span>
+                  {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {isOpen && (
+                  <div className="home__accordion-body">
+                    <div className="home__accordion-row">
+                      <span className="home__accordion-label">Form</span>
+                      <span className="home__accordion-value">
+                        {rx.form} · QTY {rx.qty}
+                      </span>
+                    </div>
+                    <div className="home__accordion-row">
+                      <span className="home__accordion-label">Directions</span>
+                      <span className="home__accordion-value">{rx.directions}</span>
+                    </div>
+                    <div className="home__accordion-row">
+                      <span className="home__accordion-label">NDC</span>
+                      <span className="home__accordion-value">{rx.ndc}</span>
+                    </div>
+                    <div className="home__accordion-row">
+                      <span className="home__accordion-label">DEA</span>
+                      <span className="home__accordion-value">{rx.dea}</span>
+                    </div>
+                    <div className="home__accordion-row">
+                      <span className="home__accordion-label">Refills</span>
+                      <span className="home__accordion-value">{rx.refills} remaining</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </section>
 
         {/* Insurance & Payment */}
         <section className="home__detail-section">
           <h3 className="home__detail-section-title">Insurance &amp; Payment</h3>
           <DetailRow label="Plan" value={order.plan} />
-          <DetailRow label="Claim #" value={order.claim} />
+          <DetailRow label="Claim" value={order.claim} />
           <DetailRow label="Total copay" value={order.copay} />
         </section>
       </div>
 
-      {/* Sticky footer */}
+      {/* Footer */}
       <div className="home__detail-footer">
-        <button className="home__detail-btn home__detail-btn--decline" onClick={onDecline}>
-          Decline
+        <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
+          <Warning size={16} />
+          Flag Issues
         </button>
         <button className="home__detail-btn home__detail-btn--accept" onClick={onAccept}>
-          Accept Order
+          Accept &amp; Prepare
+          <ArrowRight size={16} />
         </button>
       </div>
     </div>
@@ -323,7 +392,7 @@ function EmptyState() {
         </svg>
       </div>
       <p className="home__empty-title">Queue is clear</p>
-      <p className="home__empty-sub">No new orders at the moment. New orders will appear here when they arrive.</p>
+      <p className="home__empty-sub">You're all caught up. New orders will appear here automatically.</p>
     </div>
   )
 }
@@ -347,7 +416,7 @@ export default function HomePage() {
     setSelectedId(null)
   }
 
-  const handleDecline = () => {
+  const handleFlagIssues = () => {
     if (!selectedId) return
     const order = orders.find((o) => o.id === selectedId)
     if (order) {
@@ -371,7 +440,7 @@ export default function HomePage() {
         <div className="home__header-center">
           <div className="home__search">
             <Search size={16} className="home__search-icon" />
-            <input className="home__search-input" placeholder="Search orders, patients..." />
+            <input className="home__search-input" placeholder="Search input text" />
           </div>
         </div>
         <div className="home__header-right">
@@ -385,7 +454,6 @@ export default function HomePage() {
       <div className="home__body">
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className="home__sidebar">
-          {/* Tabs */}
           <div className="home__tabs">
             <button
               className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')}
@@ -401,7 +469,6 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Blocked sub-filters */}
           {activeTab === 'blocked' && (
             <div className="home__blocked-filters">
               {BLOCKED_FILTERS.map((f) => (
@@ -416,7 +483,6 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Nav items */}
           <nav className="home__nav">
             {activeTab === 'active' ? (
               <>
@@ -426,13 +492,10 @@ export default function HomePage() {
                 <NavItem label="Delivered" count={8} active={section === 'delivered'} onClick={() => setSection('delivered')} />
               </>
             ) : (
-              <>
-                <NavItem label="Blocked" count={blockedOrders.length} active onClick={() => {}} />
-              </>
+              <NavItem label="Blocked" count={blockedOrders.length} active onClick={() => {}} />
             )}
           </nav>
 
-          {/* Accepting Orders toggle */}
           <div className="home__sidebar-footer">
             <p className="home__toggle-label">Keep turn on to receive orders</p>
             <div className="home__toggle-row">
@@ -452,7 +515,6 @@ export default function HomePage() {
         {/* ── Content Area ─────────────────────────────────────────────────── */}
         <main className="home__content">
           {activeTab === 'blocked' ? (
-            /* Blocked view */
             blockedOrders.length === 0 ? (
               <EmptyState />
             ) : (
@@ -463,12 +525,10 @@ export default function HomePage() {
               </div>
             )
           ) : section !== 'new-order' ? (
-            /* Static placeholder for other sections */
             <EmptyState />
           ) : displayOrders.length === 0 ? (
             <EmptyState />
           ) : showDetail ? (
-            /* List + Detail split view */
             <div className="home__split">
               <div className="home__list">
                 {displayOrders.map((o) => (
@@ -485,11 +545,10 @@ export default function HomePage() {
                 order={selectedOrder!}
                 onClose={() => setSelectedId(null)}
                 onAccept={handleAccept}
-                onDecline={handleDecline}
+                onFlagIssues={handleFlagIssues}
               />
             </div>
           ) : (
-            /* Grid view */
             <div className="home__grid">
               {displayOrders.map((o) => (
                 <OrderCard key={o.id} order={o} onClick={() => setSelectedId(o.id)} />

@@ -230,6 +230,60 @@ const INITIAL_ORDERS: Order[] = [
     driver: { name: 'Jamal R.', phone: '(512) 555-0654', pickupEta: 'Arriving in ~5 min', assignedAt: '3:40 PM' },
     requestedAt: '8:45 PM', estimatedTime: '5 – 8 mins',
   },
+  // ── Blocked ────────────────────────────────────────────────────────────────
+  {
+    id: '#GN-214', patientName: 'Diana Prince', type: 'Rx', status: 'Pending',
+    prescriptions: [
+      { name: 'Atorvastatin 40mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00071-0157-23', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 1, scriptLabel: 'Prescription', time: '9:15 AM',
+    din: '03948271', dob: 'Apr 5, 1978', gender: 'Female', phone: '(512) 555-0221',
+    address: '820 Lamar Blvd, Austin, TX 78703', allergies: 'None on file',
+    doctor: 'Dr. Karen Li', npi: '1098765432',
+    plan: 'BlueCross BlueShield', claim: 'CLM-88501', copay: '$12.00',
+    orderState: 'blocked', checklistChecked: [false],
+    issueType: 'Insurance', issueNotes: 'Claim rejected — coverage not found', isHeld: false,
+  },
+  {
+    id: '#GN-215', patientName: 'Henry Ford', type: 'Rx', status: 'Pending',
+    prescriptions: [
+      { name: 'Oxycodone 5mg', form: 'Tablet', qty: 20, directions: 'Take 1 tablet every 6 hours as needed', ndc: '00406-0512-01', dea: 'Schedule II', refills: 0 },
+      { name: 'Ibuprofen 600mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet every 8 hours with food', ndc: '00536-3603-01', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescriptions', time: '10:30 AM',
+    din: '07123984', dob: 'Jul 30, 1965', gender: 'Male', phone: '(512) 555-0449',
+    address: '305 Congress Ave, Austin, TX 78701', allergies: 'Codeine',
+    doctor: 'Dr. Ahmed Syed', npi: '2034561890',
+    plan: 'Aetna', claim: 'CLM-88502', copay: '$8.50',
+    orderState: 'blocked', checklistChecked: [false, false],
+    issueType: 'Prescription', issueNotes: 'Prescription requires review — DEA Schedule II', isHeld: true,
+  },
+  {
+    id: '#GN-216', patientName: 'Nina Simone', type: 'OTC', status: 'Verified',
+    prescriptions: [
+      { name: 'Amoxicillin 500mg', form: 'Capsule', qty: 21, directions: 'Take 1 capsule three times daily', ndc: '00093-4159-05', dea: 'Non-controlled', refills: 0 },
+    ],
+    scriptCount: 1, scriptLabel: 'Over-the-Counter', time: '11:00 AM',
+    din: '05812347', dob: 'Feb 21, 1933', gender: 'Female', phone: '(512) 555-0667',
+    address: '112 Red River St, Austin, TX 78701', allergies: 'Penicillin',
+    doctor: 'Dr. Sarah Wells', npi: '5021348976',
+    plan: 'Humana', claim: 'CLM-88503', copay: '$0.00',
+    orderState: 'blocked', checklistChecked: [false],
+    issueType: 'Out of Stock', issueNotes: 'Amoxicillin 500mg capsules currently unavailable', isHeld: false,
+  },
+  {
+    id: '#GN-217', patientName: 'Carlos Ruiz', type: 'Rx', status: 'Pending',
+    prescriptions: [
+      { name: 'Warfarin 5mg', form: 'Tablet', qty: 30, directions: 'Take as directed by physician', ndc: '00056-0170-70', dea: 'Non-controlled', refills: 3 },
+    ],
+    scriptCount: 1, scriptLabel: 'Prescription', time: '12:20 PM',
+    din: '09234561', dob: 'Nov 14, 1960', gender: 'Male', phone: '(512) 555-0882',
+    address: '2100 Guadalupe St, Austin, TX 78705', allergies: 'Aspirin',
+    doctor: 'Dr. Maria Chen', npi: '3012348765',
+    plan: 'Medicare Part D', claim: 'CLM-88504', copay: '$4.25',
+    orderState: 'blocked', checklistChecked: [false],
+    issueType: 'Verification', issueNotes: 'Patient identity requires manual verification', isHeld: true,
+  },
   // ── Delivered ──────────────────────────────────────────────────────────────
   {
     id: '#GN-211', patientName: 'Margaret Holloway', type: 'Rx', status: 'Verified',
@@ -1166,9 +1220,7 @@ export default function HomePage() {
                 <NavItem label="History" active={false} onClick={() => {}} />
                 <NavItem label="Setting" active={false} onClick={() => {}} />
               </>
-            ) : (
-              <NavItem label="Blocked" count={blockedOrders.length} active onClick={() => {}} />
-            )}
+            ) : null}
           </nav>
 
           <div className="home__sidebar-footer">

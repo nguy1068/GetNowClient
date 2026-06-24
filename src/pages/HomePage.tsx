@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading, RadioButtonGroup, RadioButton, TextArea } from '@carbon/react'
+import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading, RadioButtonGroup, RadioButton } from '@carbon/react'
 import {
   Notification,
   Search,
@@ -21,6 +21,12 @@ import './HomePage.scss'
 type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
 type IssueType = 'Insurance' | 'Prescription' | 'Out of Stock' | 'Verification'
+type FlagReason =
+  | 'Suspected duplicate order'
+  | "Patient information doesn't match our records"
+  | 'Prescription details look incorrect'
+  | 'Suspected fraudulent or forged order'
+  | 'Other'
 type OrderState = 'new' | 'preparing' | 'waiting-driver' | 'in-transit' | 'delivered' | 'blocked'
 type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'in-transit' | 'delivered'
 
@@ -67,6 +73,7 @@ interface Order {
   requestedAt?: string
   estimatedTime?: string
   issueType?: IssueType
+  flagReason?: FlagReason
   issueNotes?: string
   isHeld?: boolean
 }
@@ -274,6 +281,22 @@ const INITIAL_ORDERS: Order[] = [
 
 const ISSUE_TYPES: IssueType[] = ['Insurance', 'Prescription', 'Out of Stock', 'Verification']
 const BLOCKED_FILTERS = ISSUE_TYPES
+
+const FLAG_REASONS: FlagReason[] = [
+  'Suspected duplicate order',
+  "Patient information doesn't match our records",
+  'Prescription details look incorrect',
+  'Suspected fraudulent or forged order',
+  'Other',
+]
+
+const FLAG_REASON_TO_ISSUE: Record<FlagReason, IssueType> = {
+  'Suspected duplicate order':                    'Verification',
+  "Patient information doesn't match our records": 'Verification',
+  'Prescription details look incorrect':          'Prescription',
+  'Suspected fraudulent or forged order':         'Verification',
+  'Other':                                        'Verification',
+}
 
 const ISSUE_LABELS: Record<IssueType, { tag: string; message: (name: string) => string; modalTitle: string }> = {
   Insurance:      { tag: 'Rejected claims',    message: (n) => `Coverage not found for ${n}`,         modalTitle: 'Insurance Rejection'   },
@@ -702,11 +725,12 @@ function DetailPanel({ order, onClose, onAccept, onFlagIssues, onReadyForPickup,
 function FlagIssuesModal({ order, onClose, onSubmit }: {
   order: Order
   onClose: () => void
-  onSubmit: (type: IssueType, notes: string, hold: boolean) => void
+  onSubmit: (reason: FlagReason, notes: string, hold: boolean) => void
 }) {
-  const [issueType, setIssueType] = useState<IssueType | ''>('')
+  const [reason, setReason] = useState<FlagReason | ''>('')
   const [notes, setNotes] = useState('')
   const [hold, setHold] = useState(false)
+  const MAX = 100
 
   return (
     <div className="home__modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
@@ -725,60 +749,72 @@ function FlagIssuesModal({ order, onClose, onSubmit }: {
           <span className="home__modal-order-name">{order.patientName}</span>
         </div>
 
-        {/* Issue type */}
+        {/* Reason radio group */}
         <div className="home__modal-section">
           <RadioButtonGroup
-            legendText="What is the issue?"
-            name="flag-issue-type"
-            valueSelected={issueType}
-            onChange={(val) => setIssueType(val as IssueType)}
+            legendText="What is the issues"
+            name="flag-reason"
+            valueSelected={reason}
+            onChange={(val) => setReason(val as FlagReason)}
             orientation="vertical"
             className="home__modal-radio-group"
           >
-            {ISSUE_TYPES.map((type) => (
-              <RadioButton key={type} labelText={type} value={type} id={`issue-${type.replace(/\s+/g, '-').toLowerCase()}`} />
+            {FLAG_REASONS.map((r) => (
+              <RadioButton key={r} labelText={r} value={r} id={`reason-${r.replace(/[\s']/g, '-').toLowerCase().slice(0, 40)}`} />
             ))}
           </RadioButtonGroup>
         </div>
 
         {/* Notes */}
         <div className="home__modal-section">
-          <TextArea
-            id="flag-notes"
-            labelText="Notes (optional)"
-            placeholder="Add more context about the issue..."
+          <div className="home__flag-note-header">
+            <span className="home__flag-note-label">
+              Add a note <span className="home__flag-note-optional">(optional)</span>
+            </span>
+            <span className="home__flag-note-count">{notes.length}/{MAX}</span>
+          </div>
+          <textarea
+            className="home__resolve-textarea"
+            placeholder="What did you observe?"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => setNotes(e.target.value.slice(0, MAX))}
             rows={4}
           />
+          <p className="home__flag-note-helper">Visible to GetNow operations team only</p>
         </div>
 
-        {/* Hold order */}
+        {/* Hold section */}
         <div className="home__modal-hold-section">
           <div className="home__modal-hold-warning">
             <div className="home__modal-hold-heading">
               <WarningAltFilled size={16} className="home__modal-warning-icon" />
               <span>Do you want to hold this order?</span>
             </div>
-            <p className="home__modal-hold-desc">
-              Holding prevents this order from being filled or dispatched until the issue is resolved.
-            </p>
+            <p className="home__modal-hold-desc">The order won't be accepted until you clear the flag.</p>
+            <div className="home__modal-hold-checkbox-row">
+              <input
+                type="checkbox"
+                id="hold-order"
+                checked={hold}
+                onChange={(e) => setHold(e.target.checked)}
+                className="home__modal-hold-checkbox"
+              />
+              <label htmlFor="hold-order" className="home__modal-hold-checkbox-label">
+                Yes, hold this order while I investigate
+              </label>
+            </div>
           </div>
-          <Checkbox
-            id="hold-order"
-            labelText="Yes, hold this order until resolved"
-            checked={hold}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHold(e.target.checked)}
-          />
         </div>
 
         {/* Footer */}
         <div className="home__modal-footer">
-          <button className="home__modal-btn home__modal-btn--cancel" onClick={onClose}>Cancel</button>
+          <button className="home__modal-btn home__modal-btn--cancel" onClick={onClose}>
+            Cancel Flag
+          </button>
           <button
-            className={['home__modal-btn', issueType ? 'home__modal-btn--submit' : 'home__modal-btn--submit-disabled'].join(' ')}
-            disabled={!issueType}
-            onClick={() => issueType && onSubmit(issueType, notes, hold)}
+            className={['home__modal-btn', reason ? 'home__modal-btn--submit' : 'home__modal-btn--submit-disabled'].join(' ')}
+            disabled={!reason}
+            onClick={() => reason && onSubmit(reason as FlagReason, notes, hold)}
           >
             Flag Issue
           </button>
@@ -1014,9 +1050,15 @@ export default function HomePage() {
     setFlaggingOrderId(selectedId)
   }
 
-  const handleFlagSubmit = (type: IssueType, notes: string, hold: boolean) => {
+  const handleFlagSubmit = (reason: FlagReason, notes: string, hold: boolean) => {
     if (!flaggingOrderId) return
-    updateOrder(flaggingOrderId, { orderState: 'blocked', issueType: type, issueNotes: notes || undefined, isHeld: hold })
+    updateOrder(flaggingOrderId, {
+      orderState: 'blocked',
+      issueType: FLAG_REASON_TO_ISSUE[reason],
+      flagReason: reason,
+      issueNotes: notes || undefined,
+      isHeld: hold,
+    })
     setSelectedId(null)
     setFlaggingOrderId(null)
     showToast('Order flagged and moved to Blocked.')

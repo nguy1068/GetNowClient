@@ -6,6 +6,7 @@ import {
   InlineNotification,
 } from '@carbon/react'
 import GetNowLogo from '../components/GetNowLogo'
+import ChatBot from '../components/ChatBot'
 import './LoginPage.scss'
 
 export default function LoginPage() {
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +35,11 @@ export default function LoginPage() {
       {/* Top navigation bar */}
       <header className="login-page__header">
         <GetNowLogo />
-        <Button kind="ghost" size="md">
+        <Button
+          kind="ghost"
+          size="md"
+          onClick={() => setIsChatOpen((prev) => !prev)}
+        >
           GetNow Customer Support
         </Button>
       </header>
@@ -88,6 +94,9 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
+
+      {/* Chat popup */}
+      <ChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   )
 }

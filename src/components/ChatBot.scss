@@ -1,0 +1,205 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+.chatbot {
+  position: fixed;
+  bottom: 0;
+  right: $spacing-07;
+  width: 316px;
+  display: flex;
+  flex-direction: column;
+  background-color: $background;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 9000;
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+
+.chatbot__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: $spacing-05;
+  background-color: $layer-02;
+  box-shadow: inset 0 -1px 0 0 #c6c6c6;
+  flex-shrink: 0;
+}
+
+.chatbot__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-01;
+  min-width: 0;
+}
+
+.chatbot__label {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: 0;
+}
+
+.chatbot__title {
+  @include type-style('heading-03');
+  color: $text-primary;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+}
+
+.chatbot__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  flex-shrink: 0;
+  margin-top: -$spacing-02;
+  margin-right: -$spacing-02;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: $icon-primary;
+
+  &:hover {
+    background-color: $layer-hover-02;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+// ── Messages ────────────────────────────────────────────────────────────────
+
+.chatbot__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-05;
+  min-height: 300px;
+  max-height: 424px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+}
+
+.chatbot__message {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-02;
+}
+
+.chatbot__message--bot {
+  align-items: flex-start;
+}
+
+.chatbot__message--user {
+  align-items: flex-end;
+}
+
+.chatbot__message-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chatbot__message-time {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  white-space: nowrap;
+
+  &--user {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    margin-top: $spacing-01;
+    color: $text-secondary;
+  }
+}
+
+.chatbot__message-bubble-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.chatbot__message-text {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  margin: 0;
+  line-height: 1.375rem;
+}
+
+.chatbot__avatar {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.chatbot__message-user-bubble {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background-color: $interactive;
+  padding: $spacing-03 $spacing-04;
+  max-width: 85%;
+
+  .chatbot__message-text {
+    color: $text-on-color;
+  }
+}
+
+// ── Input ───────────────────────────────────────────────────────────────────
+
+.chatbot__input-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  background-color: $field-02;
+  border-top: 1px solid $border-strong-01;
+  position: relative;
+}
+
+.chatbot__input {
+  flex: 1;
+  height: 48px;
+  padding: $spacing-04 $spacing-05;
+  padding-right: $spacing-09;
+  background: transparent;
+  border: none;
+  outline: none;
+  @include type-style('body-compact-01');
+  color: $text-primary;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+}
+
+.chatbot__send {
+  position: absolute;
+  right: $spacing-05;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: $interactive;
+
+  &:disabled {
+    color: $text-placeholder;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    color: $link-primary-hover;
+  }
+}

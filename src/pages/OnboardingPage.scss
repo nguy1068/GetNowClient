@@ -1,0 +1,191 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+// ── Page shell ───────────────────────────────────────────────────────────────
+
+.onboarding {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $layer-01;
+}
+
+// ── Top header bar ───────────────────────────────────────────────────────────
+
+.onboarding__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: $spacing-07;
+  background-color: $background;
+  box-shadow: inset 0 -1px 0 0 #c6c6c6;
+  flex-shrink: 0;
+}
+
+.onboarding__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+  max-width: 672px;
+}
+
+.onboarding__header-title {
+  @include type-style('heading-04');
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: -0.015rem;
+  color: $text-primary;
+  margin: 0;
+}
+
+.onboarding__header-desc {
+  @include type-style('body-01');
+  color: $text-secondary;
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+// ── Body: sidebar + main ─────────────────────────────────────────────────────
+
+.onboarding__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+
+.onboarding__sidebar {
+  width: 388px;
+  flex-shrink: 0;
+  background-color: $background;
+  box-shadow: inset -1px 0 0 0 #c6c6c6;
+  padding: $spacing-07 $spacing-07 $spacing-07 $spacing-07;
+  padding-right: $spacing-06;
+}
+
+.onboarding__progress {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 316px;
+}
+
+.onboarding__step {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-01;
+  padding-left: $spacing-04;
+  border-left: 2px solid $border-subtle-01;
+}
+
+.onboarding__step--active {
+  border-left-color: $interactive;
+
+  .onboarding__step-icon {
+    color: $interactive;
+  }
+
+  .onboarding__step-label {
+    color: $text-primary;
+    font-weight: 400;
+  }
+}
+
+.onboarding__step-icon-label {
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+}
+
+.onboarding__step-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: $text-disabled;
+}
+
+.onboarding__step-label {
+  @include type-style('body-compact-01');
+  color: $text-primary;
+  white-space: nowrap;
+}
+
+.onboarding__step-desc {
+  @include type-style('label-01');
+  color: $text-secondary;
+  margin: 0;
+  padding-left: calc(#{$spacing-03} + 16px); // icon width + gap
+  line-height: 1.33;
+}
+
+// ── Main content area ─────────────────────────────────────────────────────────
+
+.onboarding__main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-07 $spacing-03;
+}
+
+.onboarding__card {
+  background-color: $background;
+  padding: $spacing-07;
+  width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-06;
+}
+
+.onboarding__card-title {
+  @include type-style('heading-04');
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: -0.015rem;
+  color: $text-primary;
+  margin: 0;
+}
+
+// ── City / State / Postal row ─────────────────────────────────────────────────
+
+.onboarding__row {
+  display: flex;
+  gap: $spacing-05;
+  align-items: flex-end;
+}
+
+.onboarding__city {
+  width: 230px;
+  flex-shrink: 0;
+}
+
+.onboarding__state {
+  flex: 1;
+  min-width: 0;
+}
+
+.onboarding__postal {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Footer bar ────────────────────────────────────────────────────────────────
+
+.onboarding__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: $spacing-05 $spacing-07;
+  background-color: $layer-01;
+  box-shadow: inset 0 1px 0 0 #c6c6c6;
+  flex-shrink: 0;
+}

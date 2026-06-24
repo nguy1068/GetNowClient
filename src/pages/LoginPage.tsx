@@ -9,7 +9,11 @@ import GetNowLogo from '../components/GetNowLogo'
 import ChatBot from '../components/ChatBot'
 import './LoginPage.scss'
 
-export default function LoginPage() {
+interface LoginPageProps {
+  onLoginSuccess?: () => void
+}
+
+export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -27,7 +31,10 @@ export default function LoginPage() {
 
     setIsLoading(true)
     // TODO: wire up authentication
-    setTimeout(() => setIsLoading(false), 1500)
+    setTimeout(() => {
+      setIsLoading(false)
+      onLoginSuccess?.()
+    }, 1000)
   }
 
   return (

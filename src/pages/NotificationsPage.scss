@@ -1,0 +1,167 @@
+@use '@carbon/styles/scss/spacing' as *;
+@use '@carbon/styles/scss/type' as *;
+@use '@carbon/styles/scss/theme' as *;
+
+// ── Notification permission card (idle / blocked) ─────────────────────────────
+
+.notif__card {
+  background-color: $layer-02;
+  border: 1px solid $border-subtle-01;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif__card-content {
+  padding: $spacing-05;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.notif__card-heading {
+  @include type-style('heading-03');
+  color: $text-primary;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+}
+
+.notif__card-heading--sm {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+}
+
+.notif__card-body {
+  @include type-style('body-01');
+  color: $text-primary;
+  margin: 0;
+}
+
+// "Enable Notification" button row at the bottom of the card
+.notif__card-actions {
+  border-top: 1px solid $border-subtle-01;
+  display: flex;
+  align-items: stretch;
+}
+
+// Blue link-style span for "open System Settings" text
+.notif__link {
+  color: $link-primary;
+  text-decoration: underline;
+}
+
+// ── Success (notifications enabled) banner ────────────────────────────────────
+
+.notif__card--success {
+  display: flex;
+  align-items: stretch;
+  background-color: #a7f0ba;
+}
+
+.notif__card-success-bar {
+  width: 4px;
+  background-color: #24a148;
+  flex-shrink: 0;
+}
+
+.notif__card-success-content {
+  flex: 1;
+  min-width: 0;
+  padding: $spacing-05;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-03;
+}
+
+.notif__card-success-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.notif__card-heading--success {
+  @include type-style('heading-03');
+  color: #0e6027;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 400;
+}
+
+.notif__card-body--success {
+  @include type-style('body-01');
+  color: #0e6027;
+  margin: 0;
+}
+
+.notif__dismiss-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #0e6027;
+  flex-shrink: 0;
+  margin-top: -$spacing-02;
+  margin-right: -$spacing-02;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $focus;
+    outline-offset: -2px;
+  }
+}
+
+// ── Row divider ───────────────────────────────────────────────────────────────
+
+.notif__divider {
+  border: none;
+  border-top: 1px solid $border-subtle-01;
+  margin: 0;
+}
+
+// ── Toggle row ────────────────────────────────────────────────────────────────
+
+.notif__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notif__row-text {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-02;
+  max-width: 392px;
+  flex: 1;
+  min-width: 0;
+}
+
+.notif__row-title {
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0;
+}
+
+.notif__row-desc {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+  margin: 0;
+}
+
+// ── SMS section ───────────────────────────────────────────────────────────────
+
+.notif__sms-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-05;
+}

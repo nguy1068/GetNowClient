@@ -2,20 +2,6 @@
 @use '@carbon/styles/scss/type' as *;
 @use '@carbon/styles/scss/theme' as *;
 
-// Completed sidebar step — same visual treatment as active (blue border + icon)
-.onboarding__step--complete {
-  border-left-color: $interactive;
-
-  .onboarding__step-icon {
-    color: $interactive;
-  }
-}
-
-// Footer variant with Back + Next on opposite ends
-.onboarding__footer--spaced {
-  justify-content: space-between;
-}
-
 // ── PMS info tile ────────────────────────────────────────────────────────────
 
 .pms__info-tile {

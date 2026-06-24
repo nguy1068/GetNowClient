@@ -178,6 +178,16 @@
   min-width: 0;
 }
 
+// ── Completed sidebar step (same visual as active) ────────────────────────────
+
+.onboarding__step--complete {
+  border-left-color: $interactive;
+
+  .onboarding__step-icon {
+    color: $interactive;
+  }
+}
+
 // ── Footer bar ────────────────────────────────────────────────────────────────
 
 .onboarding__footer {
@@ -188,4 +198,9 @@
   background-color: $layer-01;
   box-shadow: inset 0 1px 0 0 #c6c6c6;
   flex-shrink: 0;
+}
+
+// Footer variant with Back on left + Next on right
+.onboarding__footer--spaced {
+  justify-content: space-between;
 }

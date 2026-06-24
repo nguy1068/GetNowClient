@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Warning,
   ArrowRight,
+  CheckmarkFilled,
 } from '@carbon/icons-react'
 import './HomePage.scss'
 
@@ -17,7 +18,7 @@ import './HomePage.scss'
 
 type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
-type OrderState = 'new' | 'preparing' | 'waiting-driver' | 'delivered' | 'blocked'
+type OrderState = 'new' | 'preparing' | 'waiting-driver' | 'in-transit' | 'delivered' | 'blocked'
 type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'in-transit' | 'delivered'
 
 interface Prescription {
@@ -57,7 +58,6 @@ interface Order {
   plan: string
   claim: string
   copay: string
-  // workflow state
   orderState: OrderState
   checklistChecked: boolean[]
   driver?: Driver
@@ -75,30 +75,23 @@ const MOCK_DRIVER: Driver = {
 }
 
 const INITIAL_ORDERS: Order[] = [
-  // ── New Orders ────────────────────────────────────────────────────────────
+  // ── New Orders ─────────────────────────────────────────────────────────────
   {
-    id: '#GN-201',
-    patientName: 'Margaret Holloway',
-    type: 'Rx',
-    status: 'Verified',
+    id: '#GN-201', patientName: 'Margaret Holloway', type: 'Rx', status: 'Verified',
     prescriptions: [
       { name: 'Amlodipine 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet by mouth once daily', ndc: '00069-1530-66', dea: 'Non-controlled', refills: 5 },
       { name: 'Ramipril 5mg', form: 'Capsule', qty: 30, directions: 'Take 1 capsule by mouth once daily', ndc: '00071-0221-23', dea: 'Non-controlled', refills: 3 },
-      { name: 'Rosuvastatin 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet by mouth at bedtime', ndc: '00310-0751-90', dea: 'Non-controlled', refills: 2 },
+      { name: 'Rosuvastatin 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00310-0751-90', dea: 'Non-controlled', refills: 2 },
     ],
     scriptCount: 1, scriptLabel: 'Prescription', time: '7:30 PM',
     din: '09837812', dob: 'July 12, 1953 (age 71)', gender: 'Female', phone: '(512) 555-0183',
     address: '1204 Enfield Rd, Apt 8, Austin', allergies: 'None on file',
     doctor: 'Dr. Karen Li', npi: '1098765432',
     plan: 'Medicare Part D — Humana Walmart Rx Plan', claim: 'Approval', copay: '$32.00',
-    orderState: 'new', checklistChecked: [false, false, false],
-    requestedAt: '7:30 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'new', checklistChecked: [false, false, false], requestedAt: '7:30 PM', estimatedTime: '5 – 8 mins',
   },
   {
-    id: '#GN-202',
-    patientName: 'Jamal Thompson',
-    type: 'OTC',
-    status: 'Pending',
+    id: '#GN-202', patientName: 'Jamal Thompson', type: 'OTC', status: 'Pending',
     prescriptions: [
       { name: 'Ibuprofen 200mg', form: 'Tablet', qty: 24, directions: 'Take 1-2 tablets every 4-6 hours as needed', ndc: '00573-0168-27', dea: 'Non-controlled', refills: 0 },
       { name: 'Acetaminophen 500mg', form: 'Tablet', qty: 50, directions: 'Take 2 tablets every 6 hours as needed', ndc: '50580-0449-36', dea: 'Non-controlled', refills: 0 },
@@ -108,14 +101,10 @@ const INITIAL_ORDERS: Order[] = [
     address: '320 Donald St, Winnipeg, MB R3B 2H3', allergies: 'None known',
     doctor: 'Dr. Ahmed Syed', npi: '2034561890',
     plan: 'Sun Life Financial', claim: 'CLM-88422', copay: '$5.00',
-    orderState: 'new', checklistChecked: [false, false],
-    requestedAt: '3:15 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'new', checklistChecked: [false, false], requestedAt: '3:15 PM', estimatedTime: '5 – 8 mins',
   },
   {
-    id: '#GN-203',
-    patientName: 'Sofia Martinez',
-    type: 'OTC',
-    status: 'Verified',
+    id: '#GN-203', patientName: 'Sofia Martinez', type: 'OTC', status: 'Verified',
     prescriptions: [
       { name: 'Metformin 500mg', form: 'Tablet', qty: 60, directions: 'Take 1 tablet twice daily with meals', ndc: '00093-1048-01', dea: 'Non-controlled', refills: 5 },
       { name: 'Glipizide 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet 30 min before breakfast', ndc: '00049-1560-66', dea: 'Non-controlled', refills: 2 },
@@ -125,14 +114,10 @@ const INITIAL_ORDERS: Order[] = [
     address: '99 Osborne St, Winnipeg, MB R3L 1Y5', allergies: 'Aspirin',
     doctor: 'Dr. Maria Chen', npi: '3012348765',
     plan: 'Manulife', claim: 'CLM-88423', copay: '$18.75',
-    orderState: 'new', checklistChecked: [false, false],
-    requestedAt: '10:45 AM', estimatedTime: '5 – 8 mins',
+    orderState: 'new', checklistChecked: [false, false], requestedAt: '10:45 AM', estimatedTime: '5 – 8 mins',
   },
   {
-    id: '#GN-204',
-    patientName: "Liam O'Connor",
-    type: 'Supplement',
-    status: 'Verified',
+    id: '#GN-204', patientName: "Liam O'Connor", type: 'Supplement', status: 'Verified',
     prescriptions: [
       { name: 'Vitamin D3 2000 IU', form: 'Softgel', qty: 90, directions: 'Take 1 softgel daily with a meal', ndc: '31604-0070-90', dea: 'Non-controlled', refills: 0 },
     ],
@@ -141,15 +126,11 @@ const INITIAL_ORDERS: Order[] = [
     address: '245 Portage Ave, Winnipeg, MB R3B 2A9', allergies: 'Latex',
     doctor: 'Dr. James Park', npi: '4098123456',
     plan: 'Great-West Life', claim: 'CLM-88424', copay: '$0.00',
-    orderState: 'new', checklistChecked: [false],
-    requestedAt: '1:00 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'new', checklistChecked: [false], requestedAt: '1:00 PM', estimatedTime: '5 – 8 mins',
   },
-  // ── Being Prepared ────────────────────────────────────────────────────────
+  // ── Being Prepared ─────────────────────────────────────────────────────────
   {
-    id: '#GN-205',
-    patientName: 'Carlos Robert',
-    type: 'Rx',
-    status: 'Verified',
+    id: '#GN-205', patientName: 'Carlos Robert', type: 'Rx', status: 'Verified',
     prescriptions: [
       { name: 'Lisinopril 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-513-06', dea: 'Non-controlled', refills: 3 },
       { name: 'Hydrochlorothiazide 25mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '00378-0214-01', dea: 'Non-controlled', refills: 2 },
@@ -159,15 +140,11 @@ const INITIAL_ORDERS: Order[] = [
     address: '500 Main St, Austin, TX 78701', allergies: 'None on file',
     doctor: 'Dr. Karen Li', npi: '1098765432',
     plan: 'Medicare Part D', claim: 'CLM-88425', copay: '$15.00',
-    orderState: 'preparing', checklistChecked: [true, false],
-    requestedAt: '8:30 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'preparing', checklistChecked: [true, false], requestedAt: '8:30 PM', estimatedTime: '5 – 8 mins',
   },
-  // ── Waiting for Driver (searching) ────────────────────────────────────────
+  // ── Waiting for Driver ─────────────────────────────────────────────────────
   {
-    id: '#GN-206',
-    patientName: 'Priya Sharma',
-    type: 'Rx',
-    status: 'Verified',
+    id: '#GN-206', patientName: 'Priya Sharma', type: 'Rx', status: 'Verified',
     prescriptions: [
       { name: 'Metoprolol 50mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet twice daily', ndc: '00378-0751-01', dea: 'Non-controlled', refills: 4 },
       { name: 'Atorvastatin 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00071-0157-23', dea: 'Non-controlled', refills: 2 },
@@ -177,15 +154,11 @@ const INITIAL_ORDERS: Order[] = [
     address: '2800 S Congress Ave, Austin, TX 78704', allergies: 'Penicillin',
     doctor: 'Dr. Sarah Wells', npi: '5021348976',
     plan: 'Blue Shield', claim: 'CLM-88426', copay: '$22.00',
-    orderState: 'waiting-driver', checklistChecked: [true, true],
-    driver: undefined, requestedAt: '2:31 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'waiting-driver', checklistChecked: [true, true], driver: undefined,
+    requestedAt: '2:31 PM', estimatedTime: '5 – 8 mins',
   },
-  // ── Waiting for Driver (driver found) ─────────────────────────────────────
   {
-    id: '#GN-207',
-    patientName: 'James Wilson',
-    type: 'OTC',
-    status: 'Verified',
+    id: '#GN-207', patientName: 'James Wilson', type: 'OTC', status: 'Verified',
     prescriptions: [
       { name: 'Aspirin 81mg', form: 'Tablet', qty: 90, directions: 'Take 1 tablet daily', ndc: '00280-0402-04', dea: 'Non-controlled', refills: 0 },
     ],
@@ -194,8 +167,102 @@ const INITIAL_ORDERS: Order[] = [
     address: '100 Congress Ave, Austin, TX 78701', allergies: 'None known',
     doctor: 'Dr. Tom Hughes', npi: '6034512897',
     plan: 'Aetna', claim: 'CLM-88427', copay: '$0.00',
-    orderState: 'waiting-driver', checklistChecked: [true],
-    driver: MOCK_DRIVER, requestedAt: '2:20 PM', estimatedTime: '5 – 8 mins',
+    orderState: 'waiting-driver', checklistChecked: [true], driver: MOCK_DRIVER,
+    requestedAt: '2:20 PM', estimatedTime: '5 – 8 mins',
+  },
+  // ── In Transit ─────────────────────────────────────────────────────────────
+  {
+    id: '#GN-208', patientName: 'Rachel Green', type: 'Rx', status: 'Verified',
+    prescriptions: [
+      { name: 'Lisinopril 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-513-06', dea: 'Non-controlled', refills: 3 },
+      { name: 'Lisinopril 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-514-06', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescription', time: '7:30 PM',
+    din: '02345678', dob: 'Jun 14, 1980', gender: 'Female', phone: '(512) 555-0921',
+    address: '1408 South St, Austin, TX 78704', allergies: 'None on file',
+    doctor: 'Dr. Karen Li', npi: '1098765432',
+    plan: 'Cigna', claim: 'CLM-88428', copay: '$18.00',
+    orderState: 'in-transit', checklistChecked: [true, true],
+    driver: { name: 'Marcus T.', phone: '(512) 555-0847', pickupEta: 'Arriving in ~8 min', assignedAt: '2:35 PM' },
+    requestedAt: '7:30 PM', estimatedTime: '5 – 8 mins',
+  },
+  {
+    id: '#GN-209', patientName: 'Victor Okafor', type: 'Rx', status: 'Verified',
+    prescriptions: [
+      { name: 'Metformin 500mg', form: 'Tablet', qty: 60, directions: 'Take 1 tablet twice daily', ndc: '00093-1048-01', dea: 'Non-controlled', refills: 4 },
+      { name: 'Atorvastatin 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00071-0157-23', dea: 'Non-controlled', refills: 2 },
+      { name: 'Amlodipine 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '00069-1530-66', dea: 'Non-controlled', refills: 5 },
+    ],
+    scriptCount: 3, scriptLabel: 'Prescriptions', time: '8:15 PM',
+    din: '01234567', dob: 'Sep 22, 1971', gender: 'Male', phone: '(512) 555-0456',
+    address: '3200 Red River St, Austin, TX 78705', allergies: 'Sulfa drugs',
+    doctor: 'Dr. Maria Chen', npi: '3012348765',
+    plan: 'UnitedHealth', claim: 'CLM-88429', copay: '$28.50',
+    orderState: 'in-transit', checklistChecked: [true, true, true],
+    driver: { name: 'Elena M.', phone: '(512) 555-0312', pickupEta: 'Arriving in ~12 min', assignedAt: '3:10 PM' },
+    requestedAt: '8:00 PM', estimatedTime: '8 – 12 mins',
+  },
+  {
+    id: '#GN-210', patientName: 'Yuki Tanaka', type: 'OTC', status: 'Verified',
+    prescriptions: [
+      { name: 'Amoxicillin 250mg', form: 'Capsule', qty: 21, directions: 'Take 1 capsule three times daily', ndc: '00093-4159-05', dea: 'Non-controlled', refills: 0 },
+      { name: 'Ibuprofen 400mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet every 6 hours with food', ndc: '00536-3603-01', dea: 'Non-controlled', refills: 0 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescriptions', time: '8:45 PM',
+    din: '09123456', dob: 'Dec 5, 1990', gender: 'Female', phone: '(512) 555-0789',
+    address: '1500 Guadalupe St, Austin, TX 78701', allergies: 'None known',
+    doctor: 'Dr. Ahmed Syed', npi: '2034561890',
+    plan: 'Humana', claim: 'CLM-88430', copay: '$6.00',
+    orderState: 'in-transit', checklistChecked: [true, true],
+    driver: { name: 'Jamal R.', phone: '(512) 555-0654', pickupEta: 'Arriving in ~5 min', assignedAt: '3:40 PM' },
+    requestedAt: '8:45 PM', estimatedTime: '5 – 8 mins',
+  },
+  // ── Delivered ──────────────────────────────────────────────────────────────
+  {
+    id: '#GN-211', patientName: 'Margaret Holloway', type: 'Rx', status: 'Verified',
+    prescriptions: [
+      { name: 'Lisinopril 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-513-06', dea: 'Non-controlled', refills: 3 },
+      { name: 'Lisinopril 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '68180-514-06', dea: 'Non-controlled', refills: 2 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescription', time: '7:30 PM',
+    din: '09837812', dob: 'July 12, 1953 (age 71)', gender: 'Female', phone: '(512) 555-0183',
+    address: '1204 Enfield Rd, Apt 8, Austin', allergies: 'None on file',
+    doctor: 'Dr. Karen Li', npi: '1098765432',
+    plan: 'Medicare Part D', claim: 'CLM-88431', copay: '$32.00',
+    orderState: 'delivered', checklistChecked: [true, true],
+    driver: { name: 'Marcus T.', phone: '(512) 555-0847', pickupEta: 'Delivered', assignedAt: '2:35 PM' },
+    requestedAt: '7:30 PM', estimatedTime: '5 – 8 mins',
+  },
+  {
+    id: '#GN-212', patientName: 'Victor Okafor', type: 'Rx', status: 'Verified',
+    prescriptions: [
+      { name: 'Metformin 500mg', form: 'Tablet', qty: 60, directions: 'Take 1 tablet twice daily', ndc: '00093-1048-01', dea: 'Non-controlled', refills: 4 },
+      { name: 'Atorvastatin 20mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet at bedtime', ndc: '00071-0157-23', dea: 'Non-controlled', refills: 2 },
+      { name: 'Amlodipine 5mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet once daily', ndc: '00069-1530-66', dea: 'Non-controlled', refills: 5 },
+    ],
+    scriptCount: 3, scriptLabel: 'Prescriptions', time: '8:15 PM',
+    din: '01234567', dob: 'Sep 22, 1971', gender: 'Male', phone: '(512) 555-0456',
+    address: '3200 Red River St, Austin, TX 78705', allergies: 'Sulfa drugs',
+    doctor: 'Dr. Maria Chen', npi: '3012348765',
+    plan: 'UnitedHealth', claim: 'CLM-88432', copay: '$28.50',
+    orderState: 'delivered', checklistChecked: [true, true, true],
+    driver: { name: 'Olivia K.', phone: '(512) 555-0199', pickupEta: 'Delivered', assignedAt: '3:15 PM' },
+    requestedAt: '8:00 PM', estimatedTime: '8 – 12 mins',
+  },
+  {
+    id: '#GN-213', patientName: 'Yuki Tanaka', type: 'OTC', status: 'Verified',
+    prescriptions: [
+      { name: 'Amoxicillin 250mg', form: 'Capsule', qty: 21, directions: 'Take 1 capsule three times daily', ndc: '00093-4159-05', dea: 'Non-controlled', refills: 0 },
+      { name: 'Cetirizine 10mg', form: 'Tablet', qty: 30, directions: 'Take 1 tablet daily', ndc: '45802-0650-78', dea: 'Non-controlled', refills: 0 },
+    ],
+    scriptCount: 2, scriptLabel: 'Prescriptions', time: '9:00 PM',
+    din: '09123456', dob: 'Dec 5, 1990', gender: 'Female', phone: '(512) 555-0789',
+    address: '1500 Guadalupe St, Austin, TX 78701', allergies: 'None known',
+    doctor: 'Dr. Ahmed Syed', npi: '2034561890',
+    plan: 'Humana', claim: 'CLM-88433', copay: '$6.00',
+    orderState: 'delivered', checklistChecked: [true, true],
+    driver: { name: 'Liam S.', phone: '(512) 555-0334', pickupEta: 'Delivered', assignedAt: '4:05 PM' },
+    requestedAt: '9:00 PM', estimatedTime: '5 – 8 mins',
   },
 ]
 
@@ -226,10 +293,11 @@ function progressIndex(state: OrderState): number {
   if (state === 'new') return 0
   if (state === 'preparing') return 1
   if (state === 'waiting-driver') return 2
-  return 3
+  if (state === 'in-transit') return 3
+  return 4 // delivered → all steps complete
 }
 
-// ── Drug list (card preview) ──────────────────────────────────────────────────
+// ── Drug list ─────────────────────────────────────────────────────────────────
 
 function DrugList({ prescriptions }: { prescriptions: Prescription[] }) {
   const visible = prescriptions.slice(0, 2)
@@ -248,40 +316,39 @@ function DrugList({ prescriptions }: { prescriptions: Prescription[] }) {
 // ── Order Card ────────────────────────────────────────────────────────────────
 
 function OrderCard({
-  order,
-  compact,
-  selected,
-  onClick,
+  order, compact, selected, onClick,
 }: {
-  order: Order
-  compact?: boolean
-  selected?: boolean
-  onClick: () => void
+  order: Order; compact?: boolean; selected?: boolean; onClick: () => void
 }) {
-  const isWaiting = order.orderState === 'waiting-driver'
+  const { orderState } = order
+  const isWaiting = orderState === 'waiting-driver'
+  const isInTransit = orderState === 'in-transit'
+  const isDelivered = orderState === 'delivered'
+  const showDriverRow = isInTransit || isDelivered
+
   return (
     <button
-      className={['home__card', compact ? 'home__card--compact' : '', selected ? 'home__card--selected' : '']
-        .filter(Boolean)
-        .join(' ')}
+      className={['home__card', compact ? 'home__card--compact' : '', selected ? 'home__card--selected' : ''].filter(Boolean).join(' ')}
       onClick={onClick}
       aria-pressed={selected}
     >
       <div className="home__card-row">
         <span className="home__card-id">{order.id}</span>
-        {isWaiting ? (
-          <InlineLoading
-            description="Waiting for driver..."
-            status="active"
-            className="home__card-loading"
-          />
-        ) : (
+        {isWaiting && <InlineLoading description="Waiting for driver..." status="active" className="home__card-loading" />}
+        {isInTransit && <InlineLoading description="Delivering..." status="active" className="home__card-loading" />}
+        {!isWaiting && !isInTransit && !isDelivered && (
           <span className={typeTagClass(order.type)}>{order.type}</span>
         )}
       </div>
       <div className="home__card-row">
-        <span className="home__card-patient">{order.patientName}</span>
-        {!isWaiting && <span className={statusTagClass(order.status)}>{order.status}</span>}
+        {showDriverRow ? (
+          <span className="home__card-driver">Driver: {order.driver?.name ?? '—'}</span>
+        ) : (
+          <span className="home__card-patient">{order.patientName}</span>
+        )}
+        {!isWaiting && !showDriverRow && (
+          <span className={statusTagClass(order.status)}>{order.status}</span>
+        )}
       </div>
       <DrugList prescriptions={order.prescriptions} />
       <div className="home__card-footer">
@@ -295,25 +362,13 @@ function OrderCard({
   )
 }
 
-// ── Collapsible section (used in Being Prepared / Waiting for Driver) ─────────
+// ── Collapsible section ───────────────────────────────────────────────────────
 
-function CollapsibleSection({
-  title,
-  defaultOpen = false,
-  children,
-}: {
-  title: string
-  defaultOpen?: boolean
-  children: React.ReactNode
-}) {
+function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <section className="home__detail-section">
-      <button
-        className="home__section-toggle"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-      >
+      <button className="home__section-toggle" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
         <span className="home__detail-section-title">{title}</span>
         {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
@@ -322,39 +377,34 @@ function CollapsibleSection({
   )
 }
 
+// ── Detail Row ────────────────────────────────────────────────────────────────
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="home__detail-row">
+      <span className="home__detail-label">{label}</span>
+      <span className="home__detail-value">{value}</span>
+    </div>
+  )
+}
+
 // ── Detail Panel ──────────────────────────────────────────────────────────────
 
-function DetailPanel({
-  order,
-  onClose,
-  onAccept,
-  onFlagIssues,
-  onReadyForPickup,
-  onPackageHandoff,
-  onChecklistToggle,
-}: {
-  order: Order
-  onClose: () => void
-  onAccept: () => void
-  onFlagIssues: () => void
-  onReadyForPickup: () => void
-  onPackageHandoff: () => void
+function DetailPanel({ order, onClose, onAccept, onFlagIssues, onReadyForPickup, onPackageHandoff, onChecklistToggle }: {
+  order: Order; onClose: () => void; onAccept: () => void; onFlagIssues: () => void
+  onReadyForPickup: () => void; onPackageHandoff: () => void
   onChecklistToggle: (rxIndex: number, checked: boolean) => void
 }) {
   const [openRxIndexes, setOpenRxIndexes] = useState<Set<number>>(new Set([0]))
 
   const toggleRx = (i: number) => {
-    setOpenRxIndexes((prev) => {
-      const next = new Set(prev)
-      next.has(i) ? next.delete(i) : next.add(i)
-      return next
-    })
+    setOpenRxIndexes((prev) => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); return n })
   }
 
   const allChecked = order.checklistChecked.every(Boolean)
 
-  // ── Header (shared across all states) ──────────────────────────────────────
-  const header = (
+  // Shared close + meta header
+  const metaHeader = (
     <>
       <div className="home__detail-close-row">
         <button className="home__detail-close" onClick={onClose} aria-label="Close">
@@ -371,21 +421,46 @@ function DetailPanel({
           <span className={statusTagClass(order.status)}>{order.status}</span>
         </div>
       </div>
-      <div className="home__progress-wrap">
-        <ProgressIndicator currentIndex={progressIndex(order.orderState)} spaceEqually>
-          {PROGRESS_STEPS.map((step) => (
-            <ProgressStep key={step} label={step} />
-          ))}
-        </ProgressIndicator>
-      </div>
     </>
   )
 
-  // ── New Orders body ────────────────────────────────────────────────────────
+  // Shared progress indicator
+  const progressBar = (
+    <div className="home__progress-wrap">
+      <ProgressIndicator currentIndex={progressIndex(order.orderState)} spaceEqually>
+        {PROGRESS_STEPS.map((step) => <ProgressStep key={step} label={step} />)}
+      </ProgressIndicator>
+    </div>
+  )
+
+  // Shared collapsed sections (Patient, Prescriptions, Insurance)
+  const collapsedSections = (
+    <>
+      <CollapsibleSection title="Patient">
+        <DetailRow label="DIN" value={order.din} />
+        <DetailRow label="Date of birth" value={order.dob} />
+        <DetailRow label="Gender" value={order.gender} />
+        <DetailRow label="Phone" value={order.phone} />
+        <DetailRow label="Delivery address" value={order.address} />
+        <DetailRow label="Allergies" value={order.allergies} />
+      </CollapsibleSection>
+      <CollapsibleSection title="Prescriptions">
+        <p className="home__detail-doctor" style={{ marginBottom: '8px' }}>{order.doctor} · NPI {order.npi}</p>
+        {order.prescriptions.map((rx) => <p key={rx.name} className="home__detail-rx-name">{rx.name}</p>)}
+      </CollapsibleSection>
+      <CollapsibleSection title="Insurance &amp; Payment">
+        <DetailRow label="Plan" value={order.plan} />
+        <DetailRow label="Claim" value={order.claim} />
+        <DetailRow label="Total copay" value={order.copay} />
+      </CollapsibleSection>
+    </>
+  )
+
+  // ── New Orders ─────────────────────────────────────────────────────────────
   if (order.orderState === 'new') {
     return (
       <div className="home__detail">
-        {header}
+        {metaHeader}{progressBar}
         <div className="home__detail-body">
           <section className="home__detail-section">
             <h3 className="home__detail-section-title">Patient</h3>
@@ -430,22 +505,18 @@ function DetailPanel({
           </section>
         </div>
         <div className="home__detail-footer">
-          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
-            <Warning size={16} /> Flag Issues
-          </button>
-          <button className="home__detail-btn home__detail-btn--accept" onClick={onAccept}>
-            Accept &amp; Prepare <ArrowRight size={16} />
-          </button>
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}><Warning size={16} /> Flag Issues</button>
+          <button className="home__detail-btn home__detail-btn--accept" onClick={onAccept}>Accept &amp; Prepare <ArrowRight size={16} /></button>
         </div>
       </div>
     )
   }
 
-  // ── Being Prepared body ────────────────────────────────────────────────────
+  // ── Being Prepared ─────────────────────────────────────────────────────────
   if (order.orderState === 'preparing') {
     return (
       <div className="home__detail">
-        {header}
+        {metaHeader}{progressBar}
         <div className="home__detail-body">
           <CollapsibleSection title="Patient">
             <DetailRow label="DIN" value={order.din} />
@@ -455,8 +526,6 @@ function DetailPanel({
             <DetailRow label="Delivery address" value={order.address} />
             <DetailRow label="Allergies" value={order.allergies} />
           </CollapsibleSection>
-
-          {/* Prescriptions with checklist */}
           <section className="home__detail-section">
             <div className="home__detail-section-header">
               <div>
@@ -470,22 +539,12 @@ function DetailPanel({
               const checked = order.checklistChecked[i]
               return (
                 <div key={rx.name} className="home__rx-row">
-                  <Checkbox
-                    id={`rx-${order.id}-${i}`}
-                    labelText=""
-                    hideLabel
-                    checked={checked}
-                    onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
-                      onChecklistToggle(i, evt.target.checked)
-                    }
+                  <Checkbox id={`rx-${order.id}-${i}`} labelText="" hideLabel checked={checked}
+                    onChange={(evt: React.ChangeEvent<HTMLInputElement>) => onChecklistToggle(i, evt.target.checked)}
                     className="home__rx-checkbox"
                   />
                   <div className="home__accordion-item home__accordion-item--flex">
-                    <button
-                      className={['home__accordion', checked ? 'home__accordion--checked' : ''].filter(Boolean).join(' ')}
-                      onClick={() => toggleRx(i)}
-                      aria-expanded={isOpen}
-                    >
+                    <button className={['home__accordion', checked ? 'home__accordion--checked' : ''].filter(Boolean).join(' ')} onClick={() => toggleRx(i)} aria-expanded={isOpen}>
                       <span>{rx.name}</span>
                       {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
@@ -503,7 +562,6 @@ function DetailPanel({
               )
             })}
           </section>
-
           <CollapsibleSection title="Insurance &amp; Payment">
             <DetailRow label="Plan" value={order.plan} />
             <DetailRow label="Claim" value={order.claim} />
@@ -511,14 +569,11 @@ function DetailPanel({
           </CollapsibleSection>
         </div>
         <div className="home__detail-footer">
-          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
-            <Warning size={16} /> Flag Issues
-          </button>
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}><Warning size={16} /> Flag Issues</button>
           <button
             className={['home__detail-btn', allChecked ? 'home__detail-btn--accept' : 'home__detail-btn--disabled'].join(' ')}
             onClick={allChecked ? onReadyForPickup : undefined}
             disabled={!allChecked}
-            aria-disabled={!allChecked}
           >
             Ready for Pickup <ArrowRight size={16} />
           </button>
@@ -527,45 +582,19 @@ function DetailPanel({
     )
   }
 
-  // ── Waiting for Driver body ────────────────────────────────────────────────
+  // ── Waiting for Driver ─────────────────────────────────────────────────────
   if (order.orderState === 'waiting-driver') {
     const driverFound = !!order.driver
     return (
       <div className="home__detail">
-        {header}
+        {metaHeader}{progressBar}
         <div className="home__detail-body">
-          <CollapsibleSection title="Patient">
-            <DetailRow label="DIN" value={order.din} />
-            <DetailRow label="Date of birth" value={order.dob} />
-            <DetailRow label="Gender" value={order.gender} />
-            <DetailRow label="Phone" value={order.phone} />
-            <DetailRow label="Delivery address" value={order.address} />
-            <DetailRow label="Allergies" value={order.allergies} />
-          </CollapsibleSection>
-          <CollapsibleSection title="Prescriptions">
-            <div className="home__detail-section-header" style={{ marginBottom: '8px' }}>
-              <span className="home__detail-doctor">{order.doctor} · NPI {order.npi}</span>
-            </div>
-            {order.prescriptions.map((rx) => (
-              <p key={rx.name} className="home__detail-rx-name">{rx.name}</p>
-            ))}
-          </CollapsibleSection>
-          <CollapsibleSection title="Insurance &amp; Payment">
-            <DetailRow label="Plan" value={order.plan} />
-            <DetailRow label="Claim" value={order.claim} />
-            <DetailRow label="Total copay" value={order.copay} />
-          </CollapsibleSection>
-
-          {/* Driver section */}
+          {collapsedSections}
           <section className="home__detail-section home__driver-section">
             <h3 className="home__detail-section-title">Driver</h3>
             {driverFound ? (
               <>
-                <InlineLoading
-                  description="Driver found"
-                  status="finished"
-                  className="home__driver-status"
-                />
+                <InlineLoading description="Driver found" status="finished" className="home__driver-status" />
                 <DetailRow label="Name" value={order.driver!.name} />
                 <DetailRow label="Phone" value={order.driver!.phone} />
                 <DetailRow label="Pickup ETA" value={order.driver!.pickupEta} />
@@ -573,14 +602,8 @@ function DetailPanel({
               </>
             ) : (
               <>
-                <InlineLoading
-                  description="Looking for a nearby driver..."
-                  status="active"
-                  className="home__driver-status"
-                />
-                <p className="home__driver-note">
-                  Order is ready at the counter. A driver will be assigned automatically — no action needed.
-                </p>
+                <InlineLoading description="Looking for a nearby driver..." status="active" className="home__driver-status" />
+                <p className="home__driver-note">Order is ready at the counter. A driver will be assigned automatically — no action needed.</p>
                 <DetailRow label="Requested" value={order.requestedAt ?? '—'} />
                 <DetailRow label="Time estimated" value={order.estimatedTime ?? '—'} />
               </>
@@ -588,14 +611,11 @@ function DetailPanel({
           </section>
         </div>
         <div className="home__detail-footer">
-          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}>
-            <Warning size={16} /> Flag Issues
-          </button>
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}><Warning size={16} /> Flag Issues</button>
           <button
             className={['home__detail-btn', driverFound ? 'home__detail-btn--accept' : 'home__detail-btn--disabled'].join(' ')}
             onClick={driverFound ? onPackageHandoff : undefined}
             disabled={!driverFound}
-            aria-disabled={!driverFound}
           >
             Package Handoff <ArrowRight size={16} />
           </button>
@@ -604,16 +624,54 @@ function DetailPanel({
     )
   }
 
-  return null
-}
+  // ── In Transit ─────────────────────────────────────────────────────────────
+  if (order.orderState === 'in-transit') {
+    return (
+      <div className="home__detail">
+        {metaHeader}{progressBar}
+        <div className="home__detail-body">
+          {collapsedSections}
+          <section className="home__detail-section home__driver-section">
+            <h3 className="home__detail-section-title">Driver</h3>
+            <InlineLoading description="Driver en route" status="active" className="home__driver-status" />
+            <DetailRow label="Name" value={order.driver?.name ?? '—'} />
+            <DetailRow label="Phone" value={order.driver?.phone ?? '—'} />
+            <DetailRow label="Pickup ETA" value={order.driver?.pickupEta ?? '—'} />
+            <DetailRow label="Assigned at" value={order.driver?.assignedAt ?? '—'} />
+          </section>
+        </div>
+        <div className="home__detail-footer home__detail-footer--right">
+          <button className="home__detail-btn home__detail-btn--flag" onClick={onFlagIssues}><Warning size={16} /> Flag Issues</button>
+        </div>
+      </div>
+    )
+  }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="home__detail-row">
-      <span className="home__detail-label">{label}</span>
-      <span className="home__detail-value">{value}</span>
-    </div>
-  )
+  // ── Delivered (read-only) ──────────────────────────────────────────────────
+  if (order.orderState === 'delivered') {
+    return (
+      <div className="home__detail">
+        {metaHeader}
+        {/* Delivered badge replaces progress indicator */}
+        <div className="home__delivered-badge">
+          <CheckmarkFilled size={16} className="home__delivered-icon" />
+          <span>Order delivered</span>
+        </div>
+        <div className="home__detail-body">
+          {collapsedSections}
+          <CollapsibleSection title="Driver">
+            <DetailRow label="Name" value={order.driver?.name ?? '—'} />
+            <DetailRow label="Phone" value={order.driver?.phone ?? '—'} />
+            <DetailRow label="Pickup ETA" value={order.driver?.pickupEta ?? '—'} />
+            <DetailRow label="Assigned at" value={order.driver?.assignedAt ?? '—'} />
+          </CollapsibleSection>
+        </div>
+        {/* No footer — read-only */}
+      </div>
+    )
+  }
+
+  return null
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -630,7 +688,7 @@ function EmptyState() {
         </svg>
       </div>
       <p className="home__empty-title">Queue is clear</p>
-      <p className="home__empty-sub">You're all caught up. New orders will appear here automatically.</p>
+      <p className="home__empty-sub">You're all caught up. Orders will appear here automatically.</p>
     </div>
   )
 }
@@ -645,60 +703,40 @@ export default function HomePage() {
   const [allOrders, setAllOrders] = useState<Order[]>(INITIAL_ORDERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  // Auto-assign driver after 8s for any waiting-driver order without one
-  const waitingNoDriverKey = allOrders
-    .filter((o) => o.orderState === 'waiting-driver' && !o.driver)
-    .map((o) => o.id)
-    .join(',')
-
+  // Auto-assign driver after 8s for waiting orders without one
+  const waitingNoDriverKey = allOrders.filter((o) => o.orderState === 'waiting-driver' && !o.driver).map((o) => o.id).join(',')
   useEffect(() => {
     if (!waitingNoDriverKey) return
-    const ids = waitingNoDriverKey.split(',')
-    const timers = ids.map((id) =>
-      window.setTimeout(() => {
-        setAllOrders((prev) =>
-          prev.map((o) => (o.id === id ? { ...o, driver: MOCK_DRIVER } : o))
-        )
-      }, 8000)
+    const timers = waitingNoDriverKey.split(',').map((id) =>
+      window.setTimeout(() => setAllOrders((prev) => prev.map((o) => o.id === id ? { ...o, driver: MOCK_DRIVER } : o)), 8000)
     )
     return () => timers.forEach(clearTimeout)
   }, [waitingNoDriverKey])
 
   const ordersForSection = (s: SidebarSection): Order[] => {
     switch (s) {
-      case 'new-order':       return allOrders.filter((o) => o.orderState === 'new')
-      case 'being-prepared':  return allOrders.filter((o) => o.orderState === 'preparing')
-      case 'waiting-driver':  return allOrders.filter((o) => o.orderState === 'waiting-driver')
-      default: return []
+      case 'new-order':      return allOrders.filter((o) => o.orderState === 'new')
+      case 'being-prepared': return allOrders.filter((o) => o.orderState === 'preparing')
+      case 'waiting-driver': return allOrders.filter((o) => o.orderState === 'waiting-driver')
+      case 'in-transit':     return allOrders.filter((o) => o.orderState === 'in-transit')
+      case 'delivered':      return allOrders.filter((o) => o.orderState === 'delivered')
     }
   }
 
   const countOf = (state: OrderState) => allOrders.filter((o) => o.orderState === state).length
   const blockedOrders = allOrders.filter((o) => o.orderState === 'blocked')
-
-  const displayOrders = activeTab === 'blocked'
-    ? blockedOrders
-    : ordersForSection(section)
-
+  const displayOrders = activeTab === 'blocked' ? blockedOrders : ordersForSection(section)
   const selectedOrder = allOrders.find((o) => o.id === selectedId) ?? null
   const showDetail = !!selectedId && !!selectedOrder
 
-  const changeSection = (s: SidebarSection) => {
-    setSection(s)
-    setSelectedId(null)
-  }
-
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  const changeSection = (s: SidebarSection) => { setSection(s); setSelectedId(null) }
 
   const updateOrder = (id: string, patch: Partial<Order>) =>
     setAllOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)))
 
   const handleAccept = () => {
     if (!selectedId) return
-    updateOrder(selectedId, {
-      orderState: 'preparing',
-      checklistChecked: allOrders.find((o) => o.id === selectedId)!.prescriptions.map(() => false),
-    })
+    updateOrder(selectedId, { orderState: 'preparing', checklistChecked: allOrders.find((o) => o.id === selectedId)!.prescriptions.map(() => false) })
     setSection('being-prepared')
   }
 
@@ -711,19 +749,14 @@ export default function HomePage() {
 
   const handleReadyForPickup = () => {
     if (!selectedId) return
-    updateOrder(selectedId, {
-      orderState: 'waiting-driver',
-      driver: undefined,
-      requestedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    })
+    updateOrder(selectedId, { orderState: 'waiting-driver', driver: undefined, requestedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
     setSection('waiting-driver')
   }
 
   const handlePackageHandoff = () => {
     if (!selectedId) return
-    updateOrder(selectedId, { orderState: 'delivered' })
-    setSelectedId(null)
-    setSection('delivered')
+    updateOrder(selectedId, { orderState: 'in-transit' })
+    setSection('in-transit')
   }
 
   const handleChecklistToggle = (rxIndex: number, checked: boolean) => {
@@ -737,7 +770,6 @@ export default function HomePage() {
 
   return (
     <div className="home">
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <header className="home__header">
         <div className="home__header-left">
           <span className="home__pharmacy-name">Shoppers Drug Mart Pembina &amp; Point</span>
@@ -757,33 +789,16 @@ export default function HomePage() {
       </header>
 
       <div className="home__body">
-        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <aside className="home__sidebar">
           <div className="home__tabs">
-            <button
-              className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')}
-              onClick={() => { setActiveTab('active'); setBlockedFilter(null); setSelectedId(null) }}
-            >
-              Active
-            </button>
-            <button
-              className={['home__tab', activeTab === 'blocked' ? 'home__tab--active' : ''].filter(Boolean).join(' ')}
-              onClick={() => { setActiveTab('blocked'); setSelectedId(null) }}
-            >
-              Blocked ({blockedOrders.length})
-            </button>
+            <button className={['home__tab', activeTab === 'active' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('active'); setBlockedFilter(null); setSelectedId(null) }}>Active</button>
+            <button className={['home__tab', activeTab === 'blocked' ? 'home__tab--active' : ''].filter(Boolean).join(' ')} onClick={() => { setActiveTab('blocked'); setSelectedId(null) }}>Blocked ({blockedOrders.length})</button>
           </div>
 
           {activeTab === 'blocked' && (
             <div className="home__blocked-filters">
               {BLOCKED_FILTERS.map((f) => (
-                <button
-                  key={f}
-                  className={['home__blocked-filter', blockedFilter === f ? 'home__blocked-filter--active' : ''].filter(Boolean).join(' ')}
-                  onClick={() => setBlockedFilter(blockedFilter === f ? null : f)}
-                >
-                  {f}
-                </button>
+                <button key={f} className={['home__blocked-filter', blockedFilter === f ? 'home__blocked-filter--active' : ''].filter(Boolean).join(' ')} onClick={() => setBlockedFilter(blockedFilter === f ? null : f)}>{f}</button>
               ))}
             </div>
           )}
@@ -794,7 +809,7 @@ export default function HomePage() {
                 <NavItem label="New order" count={countOf('new')} active={section === 'new-order'} onClick={() => changeSection('new-order')} />
                 <NavItem label="Being Prepared" count={countOf('preparing')} active={section === 'being-prepared'} onClick={() => changeSection('being-prepared')} />
                 <NavItem label="Waiting for Driver" count={countOf('waiting-driver')} active={section === 'waiting-driver'} onClick={() => changeSection('waiting-driver')} />
-                <NavItem label="In transit" active={section === 'in-transit'} onClick={() => changeSection('in-transit')} />
+                <NavItem label="In transit" count={countOf('in-transit')} active={section === 'in-transit'} onClick={() => changeSection('in-transit')} />
                 <NavItem label="Delivered" count={countOf('delivered')} active={section === 'delivered'} onClick={() => changeSection('delivered')} />
                 <div className="home__nav-divider" />
                 <NavItem label="History" active={false} onClick={() => {}} />
@@ -808,20 +823,12 @@ export default function HomePage() {
           <div className="home__sidebar-footer">
             <p className="home__toggle-label">Keep turn on to receive orders</p>
             <div className="home__toggle-row">
-              <Toggle
-                id="accepting-orders"
-                labelA=""
-                labelB=""
-                toggled={acceptingOrders}
-                onToggle={(v) => setAcceptingOrders(v)}
-                hideLabel
-              />
+              <Toggle id="accepting-orders" labelA="" labelB="" toggled={acceptingOrders} onToggle={(v) => setAcceptingOrders(v)} hideLabel />
               <span className="home__toggle-text">Accepting Orders</span>
             </div>
           </div>
         </aside>
 
-        {/* ── Content ──────────────────────────────────────────────────────── */}
         <main className="home__content">
           {displayOrders.length === 0 ? (
             <EmptyState />
@@ -830,13 +837,7 @@ export default function HomePage() {
               <div className="home__list">
                 <p className="home__list-title">{SECTION_TITLES[section]}</p>
                 {displayOrders.map((o) => (
-                  <OrderCard
-                    key={o.id}
-                    order={o}
-                    compact
-                    selected={o.id === selectedId}
-                    onClick={() => setSelectedId(o.id)}
-                  />
+                  <OrderCard key={o.id} order={o} compact selected={o.id === selectedId} onClick={() => setSelectedId(o.id)} />
                 ))}
               </div>
               <DetailPanel
@@ -868,10 +869,7 @@ export default function HomePage() {
 
 function NavItem({ label, count, active, onClick }: { label: string; count?: number; active: boolean; onClick: () => void }) {
   return (
-    <button
-      className={['home__nav-item', active ? 'home__nav-item--active' : ''].filter(Boolean).join(' ')}
-      onClick={onClick}
-    >
+    <button className={['home__nav-item', active ? 'home__nav-item--active' : ''].filter(Boolean).join(' ')} onClick={onClick}>
       <span className="home__nav-label">{label}</span>
       {count !== undefined && <span className="home__nav-count">{count}</span>}
     </button>

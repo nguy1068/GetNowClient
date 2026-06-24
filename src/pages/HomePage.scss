@@ -817,6 +817,45 @@
   }
 }
 
+// ── Driver name in card (In Transit / Delivered) ─────────────────────────────
+
+.home__card-driver {
+  @include type-style('body-compact-01');
+  color: $text-secondary;
+}
+
+// ── In Transit / Delivered: right-aligned single-button footer ───────────────
+
+.home__detail-footer--right {
+  justify-content: flex-end;
+
+  .home__detail-btn {
+    flex: 0 0 200px;
+    border-right: none;
+  }
+}
+
+// ── Delivered detail panel: "Order delivered" badge ───────────────────────────
+
+.home__delivered-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-03;
+  padding: 0 $spacing-05;
+  height: 48px;
+  background-color: #defbe6;
+  border-bottom: 1px solid #b6f6c8;
+  @include type-style('body-compact-01');
+  font-weight: 600;
+  color: #0e6027;
+}
+
+.home__delivered-icon {
+  color: #24a148;
+  flex-shrink: 0;
+}
+
 // ── Empty state ───────────────────────────────────────────────────────────────
 
 .home__empty {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading } from '@carbon/react'
+import { Toggle, ProgressIndicator, ProgressStep, Checkbox, InlineLoading, RadioButtonGroup, RadioButton, TextArea } from '@carbon/react'
 import {
   Notification,
   Search,
@@ -11,6 +11,7 @@ import {
   Warning,
   ArrowRight,
   CheckmarkFilled,
+  WarningAltFilled,
 } from '@carbon/icons-react'
 import './HomePage.scss'
 
@@ -18,6 +19,7 @@ import './HomePage.scss'
 
 type OrderType = 'Rx' | 'OTC' | 'Supplement'
 type OrderStatus = 'Verified' | 'Pending'
+type IssueType = 'Insurance' | 'Prescription' | 'Out of Stock' | 'Need Verification'
 type OrderState = 'new' | 'preparing' | 'waiting-driver' | 'in-transit' | 'delivered' | 'blocked'
 type SidebarSection = 'new-order' | 'being-prepared' | 'waiting-driver' | 'in-transit' | 'delivered'
 
@@ -63,6 +65,9 @@ interface Order {
   driver?: Driver
   requestedAt?: string
   estimatedTime?: string
+  issueType?: IssueType
+  issueNotes?: string
+  isHeld?: boolean
 }
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
@@ -266,7 +271,8 @@ const INITIAL_ORDERS: Order[] = [
   },
 ]
 
-const BLOCKED_FILTERS = ['Insurance', 'Prescription', 'Out of Stock', 'Need Verification']
+const ISSUE_TYPES: IssueType[] = ['Insurance', 'Prescription', 'Out of Stock', 'Need Verification']
+const BLOCKED_FILTERS = ISSUE_TYPES
 const PROGRESS_STEPS = ['Receive', 'Preparing', 'Waiting driver', 'Transit']
 
 const SECTION_TITLES: Record<SidebarSection, string> = {
@@ -324,11 +330,12 @@ function OrderCard({
   const isWaiting = orderState === 'waiting-driver'
   const isInTransit = orderState === 'in-transit'
   const isDelivered = orderState === 'delivered'
+  const isBlocked = orderState === 'blocked'
   const showDriverRow = isInTransit || isDelivered
 
   return (
     <button
-      className={['home__card', compact ? 'home__card--compact' : '', selected ? 'home__card--selected' : ''].filter(Boolean).join(' ')}
+      className={['home__card', compact ? 'home__card--compact' : '', selected ? 'home__card--selected' : '', isBlocked ? 'home__card--blocked' : ''].filter(Boolean).join(' ')}
       onClick={onClick}
       aria-pressed={selected}
     >
@@ -336,7 +343,8 @@ function OrderCard({
         <span className="home__card-id">{order.id}</span>
         {isWaiting && <InlineLoading description="Waiting for driver..." status="active" className="home__card-loading" />}
         {isInTransit && <InlineLoading description="Delivering..." status="active" className="home__card-loading" />}
-        {!isWaiting && !isInTransit && !isDelivered && (
+        {isBlocked && <span className="home__tag home__tag--blocked">{order.issueType ?? 'Blocked'}</span>}
+        {!isWaiting && !isInTransit && !isDelivered && !isBlocked && (
           <span className={typeTagClass(order.type)}>{order.type}</span>
         )}
       </div>
@@ -346,8 +354,11 @@ function OrderCard({
         ) : (
           <span className="home__card-patient">{order.patientName}</span>
         )}
-        {!isWaiting && !showDriverRow && (
+        {!isWaiting && !showDriverRow && !isBlocked && (
           <span className={statusTagClass(order.status)}>{order.status}</span>
+        )}
+        {isBlocked && order.isHeld && (
+          <span className="home__tag home__tag--held">On Hold</span>
         )}
       </div>
       <DrugList prescriptions={order.prescriptions} />
@@ -674,6 +685,167 @@ function DetailPanel({ order, onClose, onAccept, onFlagIssues, onReadyForPickup,
   return null
 }
 
+// ── Flag Issues Modal ─────────────────────────────────────────────────────────
+
+function FlagIssuesModal({ order, onClose, onSubmit }: {
+  order: Order
+  onClose: () => void
+  onSubmit: (type: IssueType, notes: string, hold: boolean) => void
+}) {
+  const [issueType, setIssueType] = useState<IssueType | ''>('')
+  const [notes, setNotes] = useState('')
+  const [hold, setHold] = useState(false)
+
+  return (
+    <div className="home__modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="home__modal" role="dialog" aria-modal="true" aria-labelledby="flag-modal-title">
+        {/* Header */}
+        <div className="home__modal-header">
+          <h2 className="home__modal-title" id="flag-modal-title">Flag an Issue</h2>
+          <button className="home__modal-close" onClick={onClose} aria-label="Close">
+            <Close size={20} />
+          </button>
+        </div>
+
+        {/* Order identity row */}
+        <div className="home__modal-order-row">
+          <span className="home__modal-order-id">{order.id}</span>
+          <span className="home__modal-order-name">{order.patientName}</span>
+        </div>
+
+        {/* Issue type */}
+        <div className="home__modal-section">
+          <RadioButtonGroup
+            legendText="What is the issue?"
+            name="flag-issue-type"
+            valueSelected={issueType}
+            onChange={(val) => setIssueType(val as IssueType)}
+            orientation="vertical"
+            className="home__modal-radio-group"
+          >
+            {ISSUE_TYPES.map((type) => (
+              <RadioButton key={type} labelText={type} value={type} id={`issue-${type.replace(/\s+/g, '-').toLowerCase()}`} />
+            ))}
+          </RadioButtonGroup>
+        </div>
+
+        {/* Notes */}
+        <div className="home__modal-section">
+          <TextArea
+            id="flag-notes"
+            labelText="Notes (optional)"
+            placeholder="Add more context about the issue..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={4}
+          />
+        </div>
+
+        {/* Hold order */}
+        <div className="home__modal-hold-section">
+          <div className="home__modal-hold-warning">
+            <div className="home__modal-hold-heading">
+              <WarningAltFilled size={16} className="home__modal-warning-icon" />
+              <span>Do you want to hold this order?</span>
+            </div>
+            <p className="home__modal-hold-desc">
+              Holding prevents this order from being filled or dispatched until the issue is resolved.
+            </p>
+          </div>
+          <Checkbox
+            id="hold-order"
+            labelText="Yes, hold this order until resolved"
+            checked={hold}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHold(e.target.checked)}
+          />
+        </div>
+
+        {/* Footer */}
+        <div className="home__modal-footer">
+          <button className="home__modal-btn home__modal-btn--cancel" onClick={onClose}>Cancel</button>
+          <button
+            className={['home__modal-btn', issueType ? 'home__modal-btn--submit' : 'home__modal-btn--submit-disabled'].join(' ')}
+            disabled={!issueType}
+            onClick={() => issueType && onSubmit(issueType, notes, hold)}
+          >
+            Flag Issue
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Blocked Detail Panel ──────────────────────────────────────────────────────
+
+function BlockedDetailPanel({ order, onClose, onRemoveFlag }: {
+  order: Order; onClose: () => void; onRemoveFlag: () => void
+}) {
+  return (
+    <div className="home__detail">
+      <div className="home__detail-close-row">
+        <button className="home__detail-close" onClick={onClose} aria-label="Close">
+          <Close size={20} />
+        </button>
+      </div>
+      <div className="home__detail-meta">
+        <div className="home__detail-meta-left">
+          <p className="home__detail-id">{order.id}</p>
+          <p className="home__detail-name">{order.patientName}</p>
+        </div>
+        <div className="home__detail-meta-tags">
+          <span className={typeTagClass(order.type)}>{order.type}</span>
+          <span className={statusTagClass(order.status)}>{order.status}</span>
+        </div>
+      </div>
+
+      {/* Blocked banner */}
+      <div className="home__blocked-banner">
+        <Warning size={16} className="home__blocked-banner-icon" />
+        <div>
+          <span className="home__blocked-banner-label">Order Blocked</span>
+          {order.issueType && <span className="home__blocked-banner-type"> — {order.issueType}</span>}
+          {order.isHeld && <span className="home__blocked-banner-held"> · On Hold</span>}
+        </div>
+      </div>
+
+      {/* Issue notes */}
+      {order.issueNotes && (
+        <div className="home__blocked-notes">
+          <p className="home__blocked-notes-label">Notes</p>
+          <p className="home__blocked-notes-text">{order.issueNotes}</p>
+        </div>
+      )}
+
+      <div className="home__detail-body">
+        <CollapsibleSection title="Patient">
+          <DetailRow label="DIN" value={order.din} />
+          <DetailRow label="Date of birth" value={order.dob} />
+          <DetailRow label="Gender" value={order.gender} />
+          <DetailRow label="Phone" value={order.phone} />
+          <DetailRow label="Delivery address" value={order.address} />
+          <DetailRow label="Allergies" value={order.allergies} />
+        </CollapsibleSection>
+        <CollapsibleSection title="Prescriptions">
+          <p className="home__detail-doctor" style={{ marginBottom: '8px' }}>{order.doctor} · NPI {order.npi}</p>
+          {order.prescriptions.map((rx) => <p key={rx.name} className="home__detail-rx-name">{rx.name}</p>)}
+        </CollapsibleSection>
+        <CollapsibleSection title="Insurance &amp; Payment">
+          <DetailRow label="Plan" value={order.plan} />
+          <DetailRow label="Claim" value={order.claim} />
+          <DetailRow label="Total copay" value={order.copay} />
+        </CollapsibleSection>
+      </div>
+
+      <div className="home__detail-footer home__detail-footer--right">
+        <button className="home__detail-btn home__detail-btn--accept" onClick={onRemoveFlag}>
+          Remove Flag <ArrowRight size={16} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Empty State ───────────────────────────────────────────────────────────────
 
 function EmptyState() {
@@ -697,11 +869,13 @@ function EmptyState() {
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'active' | 'blocked'>('active')
-  const [blockedFilter, setBlockedFilter] = useState<string | null>(null)
+  const [blockedFilter, setBlockedFilter] = useState<IssueType | null>(null)
   const [section, setSection] = useState<SidebarSection>('new-order')
   const [acceptingOrders, setAcceptingOrders] = useState(true)
   const [allOrders, setAllOrders] = useState<Order[]>(INITIAL_ORDERS)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [flaggingOrderId, setFlaggingOrderId] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   // Auto-assign driver after 8s for waiting orders without one
   const waitingNoDriverKey = allOrders.filter((o) => o.orderState === 'waiting-driver' && !o.driver).map((o) => o.id).join(',')
@@ -725,14 +899,21 @@ export default function HomePage() {
 
   const countOf = (state: OrderState) => allOrders.filter((o) => o.orderState === state).length
   const blockedOrders = allOrders.filter((o) => o.orderState === 'blocked')
-  const displayOrders = activeTab === 'blocked' ? blockedOrders : ordersForSection(section)
+  const filteredBlockedOrders = blockedFilter ? blockedOrders.filter((o) => o.issueType === blockedFilter) : blockedOrders
+  const displayOrders = activeTab === 'blocked' ? filteredBlockedOrders : ordersForSection(section)
   const selectedOrder = allOrders.find((o) => o.id === selectedId) ?? null
   const showDetail = !!selectedId && !!selectedOrder
+  const flaggingOrder = flaggingOrderId ? allOrders.find((o) => o.id === flaggingOrderId) : null
 
   const changeSection = (s: SidebarSection) => { setSection(s); setSelectedId(null) }
 
   const updateOrder = (id: string, patch: Partial<Order>) =>
     setAllOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)))
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3500)
+  }
 
   const handleAccept = () => {
     if (!selectedId) return
@@ -740,11 +921,29 @@ export default function HomePage() {
     setSection('being-prepared')
   }
 
+  // Opens the Flag Issues modal instead of blocking directly
   const handleFlagIssues = () => {
     if (!selectedId) return
-    updateOrder(selectedId, { orderState: 'blocked' })
+    setFlaggingOrderId(selectedId)
+  }
+
+  const handleFlagSubmit = (type: IssueType, notes: string, hold: boolean) => {
+    if (!flaggingOrderId) return
+    updateOrder(flaggingOrderId, { orderState: 'blocked', issueType: type, issueNotes: notes || undefined, isHeld: hold })
     setSelectedId(null)
+    setFlaggingOrderId(null)
+    showToast('Order flagged and moved to Blocked.')
+  }
+
+  const handleFlagModalClose = () => setFlaggingOrderId(null)
+
+  const handleRemoveFlag = () => {
+    if (!selectedId) return
+    updateOrder(selectedId, { orderState: 'new', issueType: undefined, issueNotes: undefined, isHeld: false })
+    setSelectedId(null)
+    setActiveTab('active')
     setSection('new-order')
+    showToast('Flag removed. Order moved back to New Orders.')
   }
 
   const handleReadyForPickup = () => {
@@ -835,25 +1034,38 @@ export default function HomePage() {
           ) : showDetail ? (
             <div className="home__split">
               <div className="home__list">
-                <p className="home__list-title">{SECTION_TITLES[section]}</p>
+                <p className="home__list-title">
+                  {activeTab === 'blocked' ? `Blocked${blockedFilter ? ` — ${blockedFilter}` : ''}` : SECTION_TITLES[section]}
+                </p>
                 {displayOrders.map((o) => (
                   <OrderCard key={o.id} order={o} compact selected={o.id === selectedId} onClick={() => setSelectedId(o.id)} />
                 ))}
               </div>
-              <DetailPanel
-                key={selectedOrder!.id}
-                order={selectedOrder!}
-                onClose={() => setSelectedId(null)}
-                onAccept={handleAccept}
-                onFlagIssues={handleFlagIssues}
-                onReadyForPickup={handleReadyForPickup}
-                onPackageHandoff={handlePackageHandoff}
-                onChecklistToggle={handleChecklistToggle}
-              />
+              {selectedOrder!.orderState === 'blocked' ? (
+                <BlockedDetailPanel
+                  key={selectedOrder!.id}
+                  order={selectedOrder!}
+                  onClose={() => setSelectedId(null)}
+                  onRemoveFlag={handleRemoveFlag}
+                />
+              ) : (
+                <DetailPanel
+                  key={selectedOrder!.id}
+                  order={selectedOrder!}
+                  onClose={() => setSelectedId(null)}
+                  onAccept={handleAccept}
+                  onFlagIssues={handleFlagIssues}
+                  onReadyForPickup={handleReadyForPickup}
+                  onPackageHandoff={handlePackageHandoff}
+                  onChecklistToggle={handleChecklistToggle}
+                />
+              )}
             </div>
           ) : (
             <>
-              <p className="home__content-title">{SECTION_TITLES[section]}</p>
+              <p className="home__content-title">
+                {activeTab === 'blocked' ? `Blocked${blockedFilter ? ` — ${blockedFilter}` : ''}` : SECTION_TITLES[section]}
+              </p>
               <div className="home__grid">
                 {displayOrders.map((o) => (
                   <OrderCard key={o.id} order={o} onClick={() => setSelectedId(o.id)} />
@@ -863,6 +1075,23 @@ export default function HomePage() {
           )}
         </main>
       </div>
+
+      {/* Flag Issues Modal */}
+      {flaggingOrder && (
+        <FlagIssuesModal
+          order={flaggingOrder}
+          onClose={handleFlagModalClose}
+          onSubmit={handleFlagSubmit}
+        />
+      )}
+
+      {/* Success Toast */}
+      {toastMessage && (
+        <div className="home__toast" role="status" aria-live="polite">
+          <CheckmarkFilled size={16} className="home__toast-icon" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   )
 }
